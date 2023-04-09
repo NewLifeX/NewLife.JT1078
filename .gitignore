@@ -1,0 +1,9 @@
+﻿################################################################################
+# 此 .gitignore 文件已由 Microsoft(R) Visual Studio 自动创建。
+################################################################################
+
+/.vs/NewLife.JT1078/DesignTimeBuild
+/.vs/NewLife.JT1078/FileContentIndex
+/.vs/NewLife.JT1078/v17
+/NewLife.JT1078/bin/Debug/net7.0
+/NewLife.JT1078/obj
