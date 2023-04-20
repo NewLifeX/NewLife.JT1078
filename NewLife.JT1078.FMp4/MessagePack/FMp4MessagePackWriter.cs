@@ -27,26 +27,31 @@ namespace NewLife.JT1078.FMp4.MessagePack
             span[0] = value;
             writer.Advance(1);
         }
+
         public void WriteUInt16(UInt16 value)
         {
             BinaryPrimitives.WriteUInt16BigEndian(writer.Free, value);
             writer.Advance(2);
         }
+
         public void WriteInt16(Int16 value)
         {
             BinaryPrimitives.WriteInt16BigEndian(writer.Free, value);
             writer.Advance(2);
         }
+
         public void WriteInt32(Int32 value)
         {
             BinaryPrimitives.WriteInt32BigEndian(writer.Free, value);
             writer.Advance(4);
         }
+
         public void WriteUInt64(UInt64 value)
         {
             BinaryPrimitives.WriteUInt64BigEndian(writer.Free, value);
             writer.Advance(8);
         }
+
         public void WriteUInt32(UInt32 value)
         {
             BinaryPrimitives.WriteUInt32BigEndian(writer.Free, value);
@@ -95,9 +100,13 @@ namespace NewLife.JT1078.FMp4.MessagePack
             writer.Advance(count);
         }
         public void WriteUInt16Return(UInt16 value, Int32 position) => BinaryPrimitives.WriteUInt16BigEndian(writer.Written.Slice(position, 2), value);
+
         public void WriteInt32Return(Int32 value, Int32 position) => BinaryPrimitives.WriteInt32BigEndian(writer.Written.Slice(position, 4), value);
+
         public void WriteUInt32Return(UInt32 value, Int32 position) => BinaryPrimitives.WriteUInt32BigEndian(writer.Written.Slice(position, 4), value);
+
         public void WriteUInt64Return(UInt64 value, Int32 position) => BinaryPrimitives.WriteUInt64BigEndian(writer.Written.Slice(position, 8), value);
+
         public void WriteByteReturn(Byte value, Int32 position) => writer.Written[position] = value;
 
         public Int32 GetCurrentPosition() => writer.WrittenCount;
@@ -120,10 +129,7 @@ namespace NewLife.JT1078.FMp4.MessagePack
 
         public void ClearMoofOffsetPosition() => MoofOffsetPosition = 0;
 
-
-        /// <summary>
-        /// ref
-        /// </summary>
+        /// <summary>ref</summary>
         /// <param name="language"></param>
         public void WriteIso639(String language)
         {

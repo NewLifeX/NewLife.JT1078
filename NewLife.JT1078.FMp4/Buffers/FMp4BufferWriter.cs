@@ -12,9 +12,9 @@ internal ref partial struct FMp4BufferWriter
         WrittenCount = 0;
     }
 
-    public Span<Byte> Free => _buffer.Slice(WrittenCount);
+    public Span<Byte> Free => _buffer[WrittenCount..];
 
-    public Span<Byte> Written => _buffer.Slice(0, WrittenCount);
+    public Span<Byte> Written => _buffer[..WrittenCount];
 
     public Int32 WrittenCount { get; private set; }
 
