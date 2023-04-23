@@ -1,44 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using JT1078.FMp4.Interfaces;
-using JT1078.FMp4.MessagePack;
+﻿using NewLife.JT1078.FMp4.Interfaces;
+using NewLife.JT1078.FMp4.MessagePack;
 
-namespace JT1078.FMp4;
-
-/// <summary>
-/// stss
-/// </summary>
-public class SyncSampleBox : FullBox, IFMp4MessagePackFormatter
+namespace NewLife.JT1078.FMp4
 {
     /// <summary>
     /// stss
     /// </summary>
-    /// <param name="version"></param>
-    /// <param name="flags"></param>
-    public SyncSampleBox(Byte version = 0, UInt32 flags = 0) : base("stss", version, flags)
+    public class SyncSampleBox : FullBox, IFMp4MessagePackFormatter
     {
-    }
+        /// <summary>
+        /// stss
+        /// </summary>
+        /// <param name="version"></param>
+        /// <param name="flags"></param>
+        public SyncSampleBox(Byte version = 0, UInt32 flags = 0) : base("stss", version, flags) { }
 
-    //private uint EntryCount { get; set; }
+        //private uint EntryCount { get; set; }
 
-    public List<UInt32> SampleNumbers { get; set; }
+        public List<UInt32> SampleNumbers { get; set; }
 
-    public void ToBuffer(ref FMp4MessagePackWriter writer)
-    {
-        Start(ref writer);
-        WriterFullBoxToBuffer(ref writer);
-        if (SampleNumbers != null && SampleNumbers.Count > 0)
+        public void ToBuffer(ref FMp4MessagePackWriter writer)
         {
-            writer.WriteUInt32((UInt32)SampleNumbers.Count);
-            foreach (var item in SampleNumbers)
+            Start(ref writer);
+            WriterFullBoxToBuffer(ref writer);
+            if (SampleNumbers != null && SampleNumbers.Count > 0)
             {
-                writer.WriteUInt32(item);
+                writer.WriteUInt32((UInt32)SampleNumbers.Count);
+                foreach (var item in SampleNumbers)
+                {
+                    writer.WriteUInt32(item);
+                }
             }
+            else
+            {
+                writer.WriteUInt32(0);
+            }
+            End(ref writer);
         }
-        else
-        {
-            writer.WriteUInt32(0);
-        }
-        End(ref writer);
     }
 }

@@ -1,4 +1,5 @@
-﻿using NewLife.JT1078.FMp4.MessagePack;
+﻿using NewLife.JT1078.FMp4.Interfaces;
+using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {

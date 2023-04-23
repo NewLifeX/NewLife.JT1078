@@ -1,4 +1,7 @@
-﻿using NewLife.JT1078.FMp4.MessagePack;
+﻿using NewLife.JT1078.FMp4.Enums;
+using NewLife.JT1078.FMp4.MessagePack;
+using NewLife.JT1078.FMp4.Samples;
+using NewLife.JT1078.H264;
 using NewLife.JT1078.Protocols;
 
 namespace NewLife.JT1078.FMp4
@@ -410,10 +413,7 @@ namespace NewLife.JT1078.FMp4
                                 {
                                     DataReferenceBox = new DataReferenceBox
                                     {
-                                        DataEntryBoxes = new List<DataEntryBox>
-            {
-                new DataEntryUrlBox(1)
-            }
+                                        DataEntryBoxes = new List<DataEntryBox> { new DataEntryUrlBox(1) }
                                     }
                                 },
                                 SampleTableBox = new SampleTableBox

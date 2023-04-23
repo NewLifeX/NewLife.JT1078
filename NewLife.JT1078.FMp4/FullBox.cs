@@ -1,6 +1,7 @@
-﻿namespace NewLife.JT1078.FMp4
-{
+﻿using NewLife.JT1078.FMp4.MessagePack;
 
+namespace NewLife.JT1078.FMp4
+{
     public abstract class FullBox : Mp4Box
     {
         public FullBox(String boxType, Byte version, UInt32 flags) : base(boxType)
@@ -9,14 +10,10 @@
             Flags = flags;
         }
 
-        /// <summary>
-        /// unsigned int(8)
-        /// </summary>
+        /// <summary>unsigned int(8)</summary>
         public Byte Version { get; set; }
 
-        /// <summary>
-        /// bit(24)
-        /// </summary>
+        /// <summary>bit(24)</summary>
         public UInt32 Flags { get; set; }
 
         /// <summary></summary>

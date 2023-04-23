@@ -1,6 +1,5 @@
 ﻿namespace NewLife.JT1078.FMp4
 {
-
     public class SampleAuxiliaryInformationSizesBox : FullBox
     {
         public SampleAuxiliaryInformationSizesBox(Byte version = 0, UInt32 flags = 0) : base("saiz", version, flags) { }

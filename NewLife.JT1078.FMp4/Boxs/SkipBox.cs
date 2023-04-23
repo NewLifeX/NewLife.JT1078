@@ -1,8 +1,7 @@
-﻿namespace JT1078.FMp4;
-
-public class SkipBox : FreeSpaceBox
+﻿namespace NewLife.JT1078.FMp4
 {
-    public SkipBox() : base("skip")
+    public class SkipBox : FreeSpaceBox
     {
+        public SkipBox() : base("skip") { }
     }
 }

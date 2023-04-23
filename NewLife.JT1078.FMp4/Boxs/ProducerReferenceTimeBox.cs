@@ -1,6 +1,5 @@
 ﻿namespace NewLife.JT1078.FMp4
 {
-
     public class ProducerReferenceTimeBox : FullBox
     {
         public ProducerReferenceTimeBox(Byte version, UInt32 flags) : base("prft", version, flags) { }

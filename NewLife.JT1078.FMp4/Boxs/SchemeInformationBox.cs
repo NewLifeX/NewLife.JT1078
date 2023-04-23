@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-
-namespace JT1078.FMp4;
-
-public class SchemeInformationBox : Mp4Box
+﻿namespace NewLife.JT1078.FMp4
 {
-    public SchemeInformationBox() : base("schi")
+    public class SchemeInformationBox : Mp4Box
     {
-    }
+        public SchemeInformationBox() : base("schi") { }
 
-    public List<Mp4Box> SchemeSpecificData { get; set; }
+        public List<Mp4Box> SchemeSpecificData { get; set; }
+    }
 }
