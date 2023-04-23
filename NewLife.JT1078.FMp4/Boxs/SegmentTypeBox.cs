@@ -3,9 +3,7 @@ using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {
-    /// <summary>
-    /// styp
-    /// </summary>
+    /// <summary>styp</summary>
     public class SegmentTypeBox : Mp4Box, IFMp4MessagePackFormatter
     {
         /// <summary>
@@ -34,6 +32,7 @@ namespace NewLife.JT1078.FMp4
         public void ToBuffer(ref FMp4MessagePackWriter writer)
         {
             Start(ref writer);
+
             writer.WriteASCII(MajorBrand);
             writer.WriteASCII(MinorVersion);
             if (CompatibleBrands != null && CompatibleBrands.Count > 0)
@@ -43,6 +42,7 @@ namespace NewLife.JT1078.FMp4
                     writer.WriteASCII(item);
                 }
             }
+
             End(ref writer);
         }
     }

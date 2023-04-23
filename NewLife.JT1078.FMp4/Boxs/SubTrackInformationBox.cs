@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace NewLife.JT1078.FMp4
+﻿namespace NewLife.JT1078.FMp4
 {
     public class SubTrackInformationBox : FullBox
     {

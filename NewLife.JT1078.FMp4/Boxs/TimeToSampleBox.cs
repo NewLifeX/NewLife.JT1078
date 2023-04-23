@@ -3,14 +3,10 @@ using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {
-    /// <summary>
-    /// stts
-    /// </summary>
+    /// <summary>stts</summary>
     public class TimeToSampleBox : FullBox, IFMp4MessagePackFormatter
     {
-        /// <summary>
-        /// stts
-        /// </summary>
+        /// <summary>stts</summary>
         /// <param name="version"></param>
         /// <param name="flags"></param>
         public TimeToSampleBox(Byte version = 0, UInt32 flags = 0) : base("stts", version, flags) { }
@@ -22,10 +18,13 @@ namespace NewLife.JT1078.FMp4
         public void ToBuffer(ref FMp4MessagePackWriter writer)
         {
             Start(ref writer);
+
             WriterFullBoxToBuffer(ref writer);
+
             if (TimeToSampleInfos != null && TimeToSampleInfos.Count > 0)
             {
                 writer.WriteUInt32((UInt32)TimeToSampleInfos.Count);
+
                 foreach (var item in TimeToSampleInfos)
                 {
                     writer.WriteUInt32(item.SampleCount);
@@ -36,6 +35,7 @@ namespace NewLife.JT1078.FMp4
             {
                 writer.WriteUInt32(0);
             }
+
             End(ref writer);
         }
 

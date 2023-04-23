@@ -17,24 +17,16 @@ namespace NewLife.JT1078.FMp4
     /// </summary>
     public class FMp4Box : IFMp4MessagePackFormatter
     {
-        /// <summary>
-        /// ftyp
-        /// </summary>
+        /// <summary>ftyp</summary>
         public FileTypeBox FileTypeBox { get; set; }
 
-        /// <summary>
-        /// moov
-        /// </summary>
+        /// <summary>moov</summary>
         public MovieBox MovieBox { get; set; }
 
-        /// <summary>
-        /// fboxs
-        /// </summary>
+        /// <summary>fboxs</summary>
         public List<FragmentBox> FragmentBoxs { get; set; }
 
-        /// <summary>
-        /// mfra
-        /// </summary>
+        /// <summary>mfra</summary>
         public MovieFragmentRandomAccessBox MovieFragmentRandomAccessBox { get; set; }
 
         /// <summary></summary>

@@ -11,6 +11,7 @@
         public class ShadowSyncSampleInfo
         {
             public UInt32 ShadowedSampleNumber { get; set; }
+
             public UInt32 SyncSampleNumber { get; set; }
         }
     }

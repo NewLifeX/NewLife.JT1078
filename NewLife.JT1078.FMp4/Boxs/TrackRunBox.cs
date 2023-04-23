@@ -28,20 +28,24 @@ namespace NewLife.JT1078.FMp4
         public TrackRunBox(Byte version = 0, UInt32 flags = 0x000f01) : base("trun", version, flags)
         {
         }
+
         /// <summary>
         /// 
         /// </summary>
         public UInt32 SampleCount { get; set; }
+
         /// <summary>
         /// 可选的
         /// 用来表示和该moof配套的mdat中实际数据内容距moof开头有多少byte
         /// 相当于就是 moof.byteLength + mdat.headerSize(8)
         /// </summary>
         public Int32 DataOffset { get; set; }
+
         /// <summary>
         /// 可选的
         /// </summary>
         public UInt32 FirstSampleFlags { get; set; }
+
         /// <summary>
         /// 可选的
         /// length:SampleCount
@@ -75,10 +79,12 @@ namespace NewLife.JT1078.FMp4
                     writer.Skip(4, out _);
                 }
             }
+
             if ((Flags & FMp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT) == FMp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT)
             {
                 writer.WriteUInt32(FirstSampleFlags);
             }
+
             if (tmpFlag)
             {
                 foreach (var trun in TrackRunInfos)
@@ -108,14 +114,18 @@ namespace NewLife.JT1078.FMp4
                     }
                 }
             }
+
             End(ref writer);
         }
 
         public class TrackRunInfo
         {
             public UInt32 SampleDuration { get; set; }
+
             public UInt32 SampleSize { get; set; }
+
             public UInt32 SampleFlags { get; set; }
+
             /// <summary>
             /// cts
             /// version == 0

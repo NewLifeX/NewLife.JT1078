@@ -3,22 +3,15 @@ using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {
-
-    /// <summary>
-    /// tkhd
-    /// </summary>
+    /// <summary>tkhd</summary>
     public class TrackHeaderBox : FullBox, IFMp4MessagePackFormatter
     {
-        /// <summary>
-        /// tkhd
-        /// </summary>
+        /// <summary>tkhd</summary>
         /// <param name="version"></param>
         /// <param name="flags"></param>
         public TrackHeaderBox(Byte version, UInt32 flags) : base("tkhd", version, flags) { }
 
-        /// <summary>
-        /// tkhd
-        /// </summary>
+        /// <summary>tkhd</summary>
         /// <param name="version"></param>
         public TrackHeaderBox(Byte version) : base("tkhd", version, (FMp4Constants.TKHD_FLAG_ENABLED | FMp4Constants.TKHD_FLAG_IN_MOVIE | FMp4Constants.TKHD_FLAG_IN_PREVIEW)) { }
 

@@ -8,9 +8,7 @@
 
         public UInt16 ItemCount { get; set; }
 
-        /// <summary>
-        /// length:ItemCount
-        /// </summary>
+        /// <summary>length:ItemCount</summary>
         public List<UInt32> GroupDescriptionIndex { get; set; }
     }
 }

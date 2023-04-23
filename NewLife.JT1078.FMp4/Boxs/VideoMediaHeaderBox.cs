@@ -3,14 +3,10 @@ using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {
-    /// <summary>
-    /// vmhd
-    /// </summary>
+    /// <summary>vmhd</summary>
     public class VideoMediaHeaderBox : FullBox, IFMp4MessagePackFormatter
     {
-        /// <summary>
-        /// vmhd
-        /// </summary>
+        /// <summary>vmhd</summary>
         /// <param name="version"></param>
         /// <param name="flags"></param>
         public VideoMediaHeaderBox(Byte version = 0, UInt32 flags = 1) : base("vmhd", version, flags) { }

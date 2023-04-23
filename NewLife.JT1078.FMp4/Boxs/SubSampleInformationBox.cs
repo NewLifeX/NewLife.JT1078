@@ -70,8 +70,11 @@ namespace NewLife.JT1078.FMp4
                 /// version != 1 uint16
                 /// </summary>
                 public UInt32 SubsampleSize { get; set; }
+
                 public Byte SubsamplePriority { get; set; }
+
                 public Byte Discardable { get; set; }
+
                 public UInt32 Reserved { get; set; }
             }
         }

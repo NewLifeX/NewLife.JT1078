@@ -6,30 +6,23 @@
 
         public UInt32 SubSegmentCount { get; set; }
 
-        /// <summary>
-        /// length:SubSegmentCount
-        /// </summary>
+        /// <summary>length:SubSegmentCount</summary>
         public List<SubsegmentIndexInfo> SubsegmentIndexInfos { get; set; }
 
         public class SubsegmentIndexInfo
         {
+            /// <summary></summary>
             public UInt32 RangesCount { get; set; }
 
-            /// <summary>
-            /// length:RangesCount
-            /// </summary>
-            public List<SubsegmentRangeInfo> SubsegmentRangeInfos { get; set; }
+            /// <summary>length:RangesCount</summary>
+            public List<SubsegmentRangeInfo> SubsegmentRangeInfos { get; set; } = new List<SubsegmentRangeInfo>();
 
             public class SubsegmentRangeInfo
             {
-                /// <summary>
-                /// 32 - 8
-                /// </summary>
+                /// <summary>32 - 8</summary>
                 public Byte Level { get; set; }
 
-                /// <summary>
-                ///  32 - 4
-                /// </summary>
+                /// <summary>32 - 4</summary>
                 public UInt32 RangeSize { get; set; }
             }
         }

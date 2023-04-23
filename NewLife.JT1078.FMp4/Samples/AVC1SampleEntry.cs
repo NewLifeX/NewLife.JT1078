@@ -30,7 +30,5 @@ namespace NewLife.JT1078.FMp4.Samples
 
             End(ref writer);
         }
-
-        //public MPEG4ExtensionDescriptorsBox MPEG4BitRateBox { get; set; }
     }
 }

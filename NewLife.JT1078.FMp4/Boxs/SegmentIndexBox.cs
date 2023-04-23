@@ -3,26 +3,18 @@ using NewLife.JT1078.FMp4.MessagePack;
 
 namespace NewLife.JT1078.FMp4
 {
-    /// <summary>
-    /// sidx
-    /// </summary>
+    /// <summary>sidx</summary>
     public class SegmentIndexBox : FullBox, IFMp4MessagePackFormatter
     {
-        /// <summary>
-        /// sidx
-        /// </summary>
+        /// <summary>sidx</summary>
         /// <param name="version"></param>
         /// <param name="flags"></param>
         public SegmentIndexBox(Byte version, UInt32 flags = 0) : base("sidx", version, flags) => ReferencedSizePositions = new List<Int32>();
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         public UInt32 ReferenceID { get; set; } = 1;
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         public UInt32 Timescale { get; set; } = 1000;
 
         /// <summary>
@@ -33,27 +25,24 @@ namespace NewLife.JT1078.FMp4
         /// </summary>
         public UInt64 EarliestPresentationTime { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         public UInt64 FirstOffset { get; set; } = 0;
 
         private UInt16 Reserved { get; set; }
 
-        //private ushort ReferenceCount { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<SegmentIndex> SegmentIndexs { get; set; }
+        /// <summary></summary>
+        public List<SegmentIndex> SegmentIndexs { get; set; } = new List<SegmentIndex>();
 
         public List<Int32> ReferencedSizePositions { get; set; }
 
         public void ToBuffer(ref FMp4MessagePackWriter writer)
         {
             Start(ref writer);
+
             WriterFullBoxToBuffer(ref writer);
             writer.WriteUInt32(ReferenceID);
             writer.WriteUInt32(Timescale);
+
             if (Version == 0)
             {
                 writer.WriteUInt32((UInt32)EarliestPresentationTime);
@@ -64,37 +53,42 @@ namespace NewLife.JT1078.FMp4
                 writer.WriteUInt64(EarliestPresentationTime);
                 writer.WriteUInt64(FirstOffset);
             }
+
             writer.WriteUInt16(Reserved);
-            if (SegmentIndexs != null && SegmentIndexs.Count > 0)
-            {
-                writer.WriteUInt16((UInt16)SegmentIndexs.Count);
-                foreach (var si in SegmentIndexs)
-                {
-                    if (si.ReferenceType)
-                    {
-                        ReferencedSizePositions.Add(writer.GetCurrentPosition());
-                        writer.WriteUInt32(si.ReferencedSize | 0x80000000);
-                    }
-                    else
-                    {
-                        ReferencedSizePositions.Add(writer.GetCurrentPosition());
-                        writer.WriteUInt32(si.ReferencedSize);
-                    }
-                    writer.WriteUInt32(si.SubsegmentDuration);
-                    if (si.StartsWithSAP)
-                    {
-                        writer.WriteUInt32((si.SAPDeltaTime | 0x80000000 | (UInt32)(si.SAPType << 28 & 0x70000000)));
-                    }
-                    else
-                    {
-                        writer.WriteUInt32((si.SAPDeltaTime | (UInt32)((si.SAPType << 28) & 0x70000000)));
-                    }
-                }
-            }
-            else
+
+            if (SegmentIndexs.Count <= 0)
             {
                 writer.WriteUInt16(0);
+                End(ref writer);
+                return;
             }
+
+            writer.WriteUInt16((UInt16)SegmentIndexs.Count);
+            foreach (var si in SegmentIndexs)
+            {
+                ReferencedSizePositions.Add(writer.GetCurrentPosition());
+
+                if (si.ReferenceType)
+                {
+                    writer.WriteUInt32(si.ReferencedSize | 0x80000000);
+                }
+                else
+                {
+                    writer.WriteUInt32(si.ReferencedSize);
+                }
+
+                writer.WriteUInt32(si.SubsegmentDuration);
+
+                if (si.StartsWithSAP)
+                {
+                    writer.WriteUInt32(si.SAPDeltaTime | 0x80000000 | (UInt32)(si.SAPType << 28 & 0x70000000));
+                }
+                else
+                {
+                    writer.WriteUInt32(si.SAPDeltaTime | (UInt32)((si.SAPType << 28) & 0x70000000));
+                }
+            }
+
             End(ref writer);
         }
 
@@ -104,23 +98,27 @@ namespace NewLife.JT1078.FMp4
             /// 4byte 32 - 1
             /// </summary>
             public Boolean ReferenceType { get; set; } = false;
+
             /// <summary>
             /// 4byte 32 - 31
             /// ReferencedSize=(moof size) + (mdat size)
             /// </summary>
             public UInt32 ReferencedSize { get; set; } = 0;
+
             /// <summary>
-            /// 
             /// </summary>
             public UInt32 SubsegmentDuration { get; set; }
+
             /// <summary>
             /// 4byte 32 - 1
             /// </summary>
             public Boolean StartsWithSAP { get; set; } = true;
+
             /// <summary>
             /// 4byte 32 - 3
             /// </summary>
             public Byte SAPType { get; set; } = 1;
+
             /// <summary>
             /// 4byte 32 - 28
             /// </summary>

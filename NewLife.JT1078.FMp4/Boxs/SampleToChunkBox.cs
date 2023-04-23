@@ -19,6 +19,7 @@ namespace NewLife.JT1078.FMp4
         {
             Start(ref writer);
             WriterFullBoxToBuffer(ref writer);
+
             if (SampleToChunkInfos != null && SampleToChunkInfos.Count > 0)
             {
                 writer.WriteUInt32((UInt32)SampleToChunkInfos.Count);
@@ -33,13 +34,16 @@ namespace NewLife.JT1078.FMp4
             {
                 writer.WriteUInt32(0);
             }
+
             End(ref writer);
         }
 
         public class SampleToChunkInfo
         {
             public UInt32 FirstChunk { get; set; }
+
             public UInt32 SamplesPerChunk { get; set; }
+
             public UInt32 SampleDescriptionIindex { get; set; }
         }
     }

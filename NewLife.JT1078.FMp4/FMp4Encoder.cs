@@ -29,14 +29,10 @@ namespace NewLife.JT1078.FMp4
         private const Int32 CacheSize = 1024 * 1024;
         private readonly H264Decoder h264Decoder = new H264Decoder();
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <summary></summary>
         public FMp4Encoder() => TrackInfos = new Dictionary<String, TrackInfo>(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// 编码ftyp盒子
-        /// </summary>
+        /// <summary>编码ftyp盒子</summary>
         /// <returns></returns>
         internal Byte[] FtypBox()
         {
@@ -59,8 +55,8 @@ namespace NewLife.JT1078.FMp4
                 // styp
                 fileTypeBox.CompatibleBrands.Add("iso6");
                 fileTypeBox.ToBuffer(ref writer);
-                var data = writer.FlushAndGetArray();
-                return data;
+
+                return writer.FlushAndGetArray();
             }
             finally
             {
@@ -68,9 +64,7 @@ namespace NewLife.JT1078.FMp4
             }
         }
 
-        /// <summary>
-        /// 编码moov盒子
-        /// </summary>
+        /// <summary>编码moov盒子</summary>
         /// <returns></returns>
         internal Byte[] MoovBox(in H264NALU sps, in H264NALU pps)
         {
@@ -125,9 +119,9 @@ namespace NewLife.JT1078.FMp4
                                     DataReferenceBox = new DataReferenceBox
                                     {
                                         DataEntryBoxes = new List<DataEntryBox>
-            {
-                new DataEntryUrlBox(1)
-            }
+                                        {
+                                            new DataEntryUrlBox(1)
+                                        }
                                     }
                                 },
                                 SampleTableBox = new SampleTableBox
@@ -173,8 +167,8 @@ namespace NewLife.JT1078.FMp4
                 };
                 movieBox.MovieExtendsBox.TrackExtendsBoxs.Add(trex);
                 movieBox.ToBuffer(ref writer);
-                var data = writer.FlushAndGetArray();
-                return data;
+
+                return writer.FlushAndGetArray();
             }
             finally
             {
@@ -182,9 +176,7 @@ namespace NewLife.JT1078.FMp4
             }
         }
 
-        /// <summary>
-        /// styp
-        /// </summary>
+        /// <summary>styp</summary>
         /// <returns></returns>
         internal Byte[] StypBox()
         {
@@ -204,8 +196,8 @@ namespace NewLife.JT1078.FMp4
                 stypTypeBox.CompatibleBrands.Add("iso5");
                 stypTypeBox.CompatibleBrands.Add("iso6");
                 stypTypeBox.ToBuffer(ref writer);
-                var data = writer.FlushAndGetArray();
-                return data;
+
+                return writer.FlushAndGetArray();
             }
             finally
             {
@@ -266,12 +258,12 @@ namespace NewLife.JT1078.FMp4
                     ReferenceID = 1,
                     EarliestPresentationTime = trackInfo.SubsegmentDuration,
                     SegmentIndexs = new List<SegmentIndexBox.SegmentIndex>()
-            {
-                 new SegmentIndexBox.SegmentIndex
-                 {
-                      SubsegmentDuration=subsegmentDuration
-                 }
-            }
+                    {
+                         new SegmentIndexBox.SegmentIndex
+                         {
+                              SubsegmentDuration=subsegmentDuration
+                         }
+                    }
                 };
                 segmentIndexBox.ToBuffer(ref writer);
 
@@ -300,14 +292,14 @@ namespace NewLife.JT1078.FMp4
                 };
                 trackInfo.SubsegmentDuration += subsegmentDuration;
                 TrackInfos[key] = trackInfo;
-                //trun
+                // trun
                 movieFragmentBox.TrackFragmentBox.TrackRunBox = new TrackRunBox(1, flags: TrunFlags)
                 {
                     FirstSampleFlags = FMp4Constants.TREX_FLAG_SAMPLE_DEPENDS_ON_I_PICTURE,
                     TrackRunInfos = truns
                 };
                 movieFragmentBox.ToBuffer(ref writer);
-                //mdat
+                // mdat
                 var mediaDataBox = new MediaDataBox
                 {
                     Data = new List<Byte[]>()
@@ -315,12 +307,11 @@ namespace NewLife.JT1078.FMp4
                 foreach (var nalu in nalus)
                 {
                     var h264NALUs = h264Decoder.ParseNALU(nalu);
-                    if (h264NALUs != null)
+                    if (h264NALUs == null) continue;
+
+                    foreach (var n in h264NALUs)
                     {
-                        foreach (var n in h264NALUs)
-                        {
-                            mediaDataBox.Data.Add(n.RawData);
-                        }
+                        mediaDataBox.Data.Add(n.RawData);
                     }
                 }
                 mediaDataBox.ToBuffer(ref writer);
@@ -331,8 +322,7 @@ namespace NewLife.JT1078.FMp4
                     writer.WriteUInt32Return((UInt32)(current2 - current1), postion);
                 }
 
-                var data = writer.FlushAndGetArray();
-                return data;
+                return writer.FlushAndGetArray();
             }
             finally
             {
