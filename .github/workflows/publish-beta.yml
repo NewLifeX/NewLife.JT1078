@@ -1,33 +1,40 @@
-name: Beta版发布
+name: publish-beta
 
 on:
   push:
-    branches: [ main, master ]
+    branches: 
+        - master
+        - main
+    paths:
+        - 'NewLife.JT1078/**'
+        - 'NewLife.JT1078.Flv/**'
+        - 'NewLife.JT1078.FMp4/**'
+        - 'NewLife.JT1078.Server/**'
+  workflow_dispatch:
 
 jobs:
-  publish:
+  build-publish:
+
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup .NET
+    - name: Setup dotNET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          6.0.x
-          8.0.x
-          9.0.x
-          10.0.x
-
-    - name: Restore
-      run: dotnet restore
-
+          6.x
+          7.x
+          8.x
+          9.x
+          10.x
+    - name: Get Version
+      run: echo "VERSION=$(date '+%Y.%m%d-beta%H%M')" >> $GITHUB_ENV
     - name: Build
-      run: dotnet build -c Release --no-restore
-
-    - name: Pack
-      run: dotnet pack -c Release --no-build -o ./nupkgs --version-suffix "beta${{ github.run_number }}"
-
-    - name: Push to NuGet
-      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: |
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078.Flv/NewLife.JT1078.Flv.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078.FMp4/NewLife.JT1078.FMp4.csproj
+    - name: Publish
+      run: |
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
