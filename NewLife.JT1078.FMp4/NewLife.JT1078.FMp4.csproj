@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;fMP4;CMAF;MP4;ISOBMFF;HLS;DASH;直播;音视频;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>初版发布：fMP4/CMAF转封装，支持直播和点播</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：fMP4/CMAF转封装，支持49个核心ISO BMFF Box类型</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

@@ -32,7 +32,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;Server;TCP;音视频;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>初版发布：JT1078 TCP服务端，支持分包合并</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：TCP/UDP双栈服务端，HTTP/WS直播，集群命令下发，流媒体授权，DI构建器</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

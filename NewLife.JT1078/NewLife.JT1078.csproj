@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;1078;GB1078;音视频;视频通讯;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>初版发布：核心RTP协议解析、音视频编解码、H.264解析</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：RTP协议解析、G711/ADPCM编解码、H.264解析、集群命令下发总线</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

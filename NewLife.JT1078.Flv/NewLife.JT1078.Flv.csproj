@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;FLV;HTTP-FLV;直播;音视频;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>初版发布：FLV转封装，支持视频和音频Tag编码</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：FLV转封装，支持HTTP-FLV/WebSocket-FLV实时直播</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
