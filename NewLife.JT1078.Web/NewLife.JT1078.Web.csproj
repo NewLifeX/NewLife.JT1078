@@ -20,6 +20,7 @@
     <LangVersion>latest</LangVersion>
     <SignAssembly>False</SignAssembly>
     <AnalysisLevel>latest</AnalysisLevel>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
