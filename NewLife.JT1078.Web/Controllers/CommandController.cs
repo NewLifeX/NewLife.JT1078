@@ -81,12 +81,14 @@ public class CommandController : ControllerBase
             return Ok(Array.Empty<Object>());
 
         var sessions = DeviceManager.GetSessions();
-        var list = sessions.Select(s => new
+        var list = new List<Object>();
+        foreach (var s in sessions)
         {
-            s.DeviceKey,
-            s.Remote,
-            s.LastActive,
-        }).ToArray();
+            if (s is JT1078Session tcp)
+                list.Add(new { tcp.DeviceKey, tcp.Remote, tcp.LastActive, Type = "TCP" });
+            else if (s is JT1078UdpSession udp)
+                list.Add(new { DeviceKey = udp.DeviceKey, Remote = udp.RemoteEndPoint?.ToString(), udp.LastActive, Type = "UDP" });
+        }
 
         return Ok(list);
     }

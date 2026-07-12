@@ -9,7 +9,8 @@ namespace NewLife.JT1078.Server;
 public class JT1078HostedService : IHostedService
 {
     #region 属性
-    private NetServer _server;
+    private NetServer _tcpServer;
+    private JT1078UdpServer _udpServer;
     private readonly ITracer _tracer;
     #endregion
 
@@ -29,6 +30,8 @@ public class JT1078HostedService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var set = JT1078Setting.Current;
+
+        // 启动 TCP 服务
         if (set.Port > 0)
         {
             var svr = new NewLife.JT1078.Server.JT1078Server
@@ -47,7 +50,17 @@ public class JT1078HostedService : IHostedService
             }
 
             svr.Start();
-            _server = svr;
+            _tcpServer = svr;
+        }
+
+        // 启动 UDP 服务
+        if (set.UdpPort > 0)
+        {
+            _udpServer = new JT1078UdpServer
+            {
+                Setting = set,
+            };
+            _udpServer.Start();
         }
 
         return Task.CompletedTask;
@@ -60,8 +73,11 @@ public class JT1078HostedService : IHostedService
     {
         lock (this)
         {
-            _server?.Stop(nameof(StopAsync));
-            _server = null;
+            _tcpServer?.Stop(nameof(StopAsync));
+            _tcpServer = null;
+
+            _udpServer?.Stop();
+            _udpServer = null;
         }
 
         return Task.CompletedTask;

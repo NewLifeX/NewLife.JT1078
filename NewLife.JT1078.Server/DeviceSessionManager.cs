@@ -38,7 +38,7 @@ public class DeviceSessionManager : DisposeBase
     public ICacheProvider CacheProvider { get; set; }
 
     /// <summary>本地设备会话字典。Key = SIM_Channel</summary>
-    private readonly ConcurrentDictionary<String, JT1078Session> _sessions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<String, Object> _sessions = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ITracer _tracer;
     private readonly IServiceProvider _provider;
@@ -102,8 +102,8 @@ public class DeviceSessionManager : DisposeBase
     #region 会话管理
     /// <summary>注册设备会话</summary>
     /// <param name="key">设备标识，格式 SIM_Channel</param>
-    /// <param name="session">设备 TCP 会话</param>
-    public void Register(String key, JT1078Session session)
+    /// <param name="session">设备会话（JT1078Session 或 JT1078UdpSession）</param>
+    public void Register(String key, Object session)
     {
         _sessions[key] = session;
         WriteLog("Register {0}", key);
@@ -120,14 +120,14 @@ public class DeviceSessionManager : DisposeBase
     }
 
     /// <summary>获取本地设备会话</summary>
-    public JT1078Session GetSession(String key)
+    public Object GetSession(String key)
     {
         _sessions.TryGetValue(key, out var session);
         return session;
     }
 
     /// <summary>获取所有已注册的本地设备</summary>
-    public JT1078Session[] GetSessions() => _sessions.Values.ToArray();
+    public Object[] GetSessions() => _sessions.Values.ToArray();
 
     /// <summary>是否存在指定设备的本地会话</summary>
     public Boolean Contains(String key) => _sessions.ContainsKey(key);
@@ -148,7 +148,7 @@ public class DeviceSessionManager : DisposeBase
         var key = $"{sim}_{channel}";
 
         // 先尝试本地发送
-        if (_sessions.TryGetValue(key, out var session))
+        if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
             session.SendJT(avtype, dataType, payload);
             WriteLog("Publish 本地发送 key={0} type={1}", key, dataType);
@@ -176,7 +176,7 @@ public class DeviceSessionManager : DisposeBase
         var key = $"{sim}_{channel}";
 
         // 先尝试本地发送
-        if (_sessions.TryGetValue(key, out var session))
+        if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
             session.SendJT(avtype, dataType, payload);
             WriteLog("PublishAsync 本地发送 key={0} type={1}", key, dataType);
@@ -210,7 +210,7 @@ public class DeviceSessionManager : DisposeBase
         var command = message[(p + 1)..];
 
         // 查找本地是否有目标会话
-        if (!_sessions.TryGetValue(key, out var session))
+        if (!(_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session))
             return _completedTask;
 
         // 解析命令并转发给设备
