@@ -89,10 +89,7 @@ namespace NewLife.JT1078.Protocols
 
         /// <summary>负载数据</summary>
         [IgnoreDataMember]
-        public Packet Payload { get; set; }
-
-        /// <summary>负载数据（显式接口）</summary>
-        IPacket IMessage.Payload { get => Payload; set => Payload = value as Packet; }
+        public IPacket Payload { get; set; }
         #endregion
 
         #region 读写
@@ -143,7 +140,7 @@ namespace NewLife.JT1078.Protocols
                     //rs = false;
                 }
 
-                Payload = reader.ReadBytes(len);
+                Payload = new ArrayPacket(reader.ReadBytes(len));
             }
 
             return rs;
@@ -201,7 +198,7 @@ namespace NewLife.JT1078.Protocols
 
         /// <summary>转数据包</summary>
         /// <returns></returns>
-        public Packet ToPacket()
+        public IPacket ToPacket()
         {
             try
             {
@@ -209,7 +206,7 @@ namespace NewLife.JT1078.Protocols
                 if (!Write(ms, null)) return null;
 
                 ms.Position = 0;
-                return new Packet(ms);
+                return new ArrayPacket(ms);
             }
             catch (Exception ex)
             {
@@ -249,22 +246,20 @@ namespace NewLife.JT1078.Protocols
         /// <returns></returns>
         public static Int32 GetLength(IPacket pk)
         {
-            if (pk is not Packet p) return 0;
+            if (pk.Total < 16 + 2) return 0;
 
-            // 4+(Version)1+(Kind)1+(seq)2+(sim)6+(channel)1+(DataType)1
-            if (p.Total < 16 + 2) return 0;
-
-            var dataType = (DataTypes)(p[15] >> 4);
+            var dataType = (DataTypes)(pk[15] >> 4);
 
             // 头部长度
             var len = 4 + 1 + 1 + 2 + 6 + 1 + 1;
             if (dataType != DataTypes.Transparent) len += 8;
             if (dataType <= DataTypes.VideoBFrame) len += 2 + 2;
 
-            var pk2 = p.Slice(len);
+            var pk2 = pk.Slice(len, pk.Total - len);
             if (pk2.Total < 2) return 0;
 
-            len += pk2.ReadUInt16(false);
+            // 手动读取 2 字节大端长度 (替换已过时的 Packet.ReadUInt16)
+            len += (pk2[0] << 8) | pk2[1];
 
             len += 2;
 

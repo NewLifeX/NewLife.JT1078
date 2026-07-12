@@ -23,7 +23,13 @@ public class PcmHandler : IMsgHandler
 
         using var span = DefaultTracer.Instance?.NewSpan("PcmHandler.Encode", msg);
 
-        var data = msg.Payload?.ReadBytes();
+        var buf = msg.Payload;
+        Byte[] data = null;
+        if (buf != null)
+        {
+            data = new Byte[buf.Total];
+            for (var i = 0; i < data.Length; i++) data[i] = buf[i];
+        }
         if (data == null || data.Length == 0) return 0;
 
         // 解码为 PCM

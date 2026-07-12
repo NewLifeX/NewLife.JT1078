@@ -1,5 +1,6 @@
 using NewLife;
 using NewLife.JT1078.Models;
+using NewLife.JT1078.Protocols;
 using NewLife.Log;
 
 namespace NewLife.JT1078.Server;

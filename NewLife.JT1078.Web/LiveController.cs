@@ -72,6 +72,17 @@ public class LiveController : ControllerBase
             await ProcessHttp(context, model, RTPType.Wav);
     }
 
+    /// <summary>MP3 音频直播</summary>
+    /// <remarks>需要外部 MP3 编码器库支持，当前返回 501 Not Implemented</remarks>
+    [Route("live.mp3")]
+    public async Task OnMp3([FromQuery] LiveModel model)
+    {
+        var context = HttpContext;
+        context.Response.StatusCode = 501;
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync("MP3 encoder not implemented. Need external MP3 codec library (e.g., LAME).");
+    }
+
     private async Task ProcessWebSocket(HttpContext context, LiveModel model, RTPType type)
     {
         if (!context.WebSockets.IsWebSocketRequest) return;

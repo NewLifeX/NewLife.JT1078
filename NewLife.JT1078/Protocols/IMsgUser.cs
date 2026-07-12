@@ -1,7 +1,7 @@
 using NewLife;
 using NewLife.JT1078.Models;
 
-namespace NewLife.JT1078.Server;
+namespace NewLife.JT1078.Protocols;
 
 /// <summary>消息用户接口。代表一个拉流订阅者（HTTP/WS）</summary>
 public interface IMsgUser : IDisposable2

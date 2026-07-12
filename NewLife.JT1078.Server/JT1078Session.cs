@@ -25,8 +25,25 @@ public class JT1078Session : NetSession<JT1078Server>
     /// <summary>服务提供者。可用于创建子作用域</summary>
     public IServiceProvider ServiceProvider { get; set; }
 
+    /// <summary>设备标识。SIM+Channel 构成的唯一键</summary>
+    public String DeviceKey { get; set; }
+
     /// <summary>接收到 RTP 报文时触发</summary>
     public event EventHandler<JTMessage> OnReceiveMessage;
+    #endregion
+
+    #region 构造
+    /// <summary>释放会话时注销设备注册</summary>
+    protected override void Dispose(Boolean disposing)
+    {
+        base.Dispose(disposing);
+
+        if (DeviceKey != null)
+        {
+            var mgr = Host?.DeviceManager;
+            mgr?.Unregister(DeviceKey);
+        }
+    }
     #endregion
 
     #region 方法
@@ -70,7 +87,7 @@ public class JT1078Session : NetSession<JT1078Server>
     /// <param name="dataType">数据类型</param>
     /// <param name="payload">负载数据</param>
     /// <returns>发送的字节数</returns>
-    public virtual Int32 SendJT(AVTypes avtype, DataTypes dataType, Packet payload)
+    public virtual Int32 SendJT(AVTypes avtype, DataTypes dataType, IPacket payload)
     {
         var msg = new JTMessage
         {

@@ -1,8 +1,7 @@
 using NewLife.JT1078.Audio;
 using NewLife.JT1078.Protocols;
-using NewLife.Net;
 
-namespace NewLife.JT1078.Server;
+namespace NewLife.JT1078.Protocols;
 
 /// <summary>消息中枢接口。管理设备连接与用户订阅者之间的数据分发</summary>
 public interface IMsgHub
@@ -13,8 +12,8 @@ public interface IMsgHub
     /// <summary>逻辑通道号</summary>
     Int32 Channel { get; set; }
 
-    /// <summary>设备会话</summary>
-    INetSession Device { get; set; }
+    /// <summary>设备会话对象（可由不同传输层实现）</summary>
+    Object Device { get; set; }
 
     /// <summary>空闲超时秒数。超过此时间无推送则自动断开</summary>
     Int32 IdleTime { get; set; }

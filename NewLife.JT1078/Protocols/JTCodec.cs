@@ -34,7 +34,7 @@ namespace NewLife.JT1078.Protocols
         /// <returns></returns>
         public override Object Read(IHandlerContext context, Object message)
         {
-            if (message is not Packet pk) return base.Read(context, message);
+            if (message is not IPacket pk) return base.Read(context, message);
 
             // 解码得到多个消息
             var list = Decode(context, pk);
@@ -64,7 +64,7 @@ namespace NewLife.JT1078.Protocols
         /// <param name="context"></param>
         /// <param name="pk">包</param>
         /// <returns></returns>
-        protected IList<JTMessage> Decode(IHandlerContext context, Packet pk)
+        protected IList<JTMessage> Decode(IHandlerContext context, IPacket pk)
         {
             var ss = context.Owner as IExtend;
             if (ss[CodecName] is not PacketCodec pc)

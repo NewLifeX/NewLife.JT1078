@@ -30,7 +30,7 @@ public class H264DecoderTests
             DataType = DataTypes.VideoIFrame,
             PacketFlag = PacketFlags.Alone,
             Timestamp = 1000,
-            Payload = new Packet(nalData),
+            Payload = new ArrayPacket(nalData),
         };
 
         var decoder = new H264Decoder();
@@ -85,7 +85,7 @@ public class H264DecoderTests
             Type = AVTypes.H264,
             DataType = DataTypes.VideoIFrame,
             PacketFlag = PacketFlags.Alone,
-            Payload = new Packet(nalBytes),
+            Payload = new ArrayPacket(nalBytes),
         };
 
         var nalus = decoder.ParseNALU(msg);

@@ -269,7 +269,11 @@ public class FlvEncoder
         }
 
         // 编码成功，此时为一帧aac音频数据
-        var pcm = audioCodecFactory.ToPcm(package.Type, package.Payload.ReadBytes());
+        var buf = package.Payload;
+        var raw = new Byte[buf.Total];
+        for (var i = 0; i < buf.Total; i++)
+            raw[i] = buf[i];
+        var pcm = audioCodecFactory.ToPcm(package.Type, raw);
         if (pcm != null && pcm.Length > 0)
         {
             var aacFrameData = new Byte[4096];

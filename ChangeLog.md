@@ -21,3 +21,17 @@
 - 多目标框架支持：netstandard2.0/2.1、net45/461、net6.0/8.0
 - 实现 G711U 编码方向（FromPcm），补全编解码器
 - 适配 NewLife.Core 最新 IMessage 接口
+
+### 流媒体服务（新增）
+- HTTP/WebSocket 直播端点（FLV/fMP4/PCM/AAC/WAV）
+- FLV/fMP4 录像回放端点
+- 格式处理器链：FlvHandler/Mp4Handler/AacHandler/PcmHandler/WavHandler
+- MsgHub 消息通道（发布/订阅模型）
+- SessionManager 订阅者管理
+- StatusService 设备在线状态跟踪
+- FileCache 录制文件缓存
+- ASP.NET Core 集成（NET6.0+）
+- 基于 flv.js 的 Web 播放器 Demo
+
+### 测试
+- 34 项单元测试覆盖协议、编解码、消息模型、服务端

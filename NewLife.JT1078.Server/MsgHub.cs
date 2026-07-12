@@ -18,7 +18,7 @@ public class MsgHub : DisposeBase, IMsgHub
     public Int32 Channel { get; set; }
 
     /// <summary>设备会话</summary>
-    public INetSession Device { get; set; }
+    public Object Device { get; set; }
 
     /// <summary>空闲超时秒数</summary>
     public Int32 IdleTime { get; set; } = 30;

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title>JT1078 实时视频播放</title>
+    <style>
+        body { font-family: 'Microsoft YaHei', sans-serif; margin: 20px; background: #1a1a2e; color: #eee; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #e94560; }
+        .player-wrap { background: #16213e; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        video { width: 100%; max-width: 800px; background: #000; }
+        input, select, button { padding: 8px 12px; margin: 4px; border: none; border-radius: 4px; }
+        input, select { background: #0f3460; color: #eee; }
+        button { background: #e94560; color: #fff; cursor: pointer; }
+        button:hover { background: #c73652; }
+        .info { color: #aaa; font-size: 12px; margin-top: 8px; }
+        .endpoints { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .endpoint { background: #0f3460; padding: 8px 12px; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚛 JT1078 实时视频监控</h1>
+        <p>基于 flv.js 的浏览器端实时视频播放演示</p>
+
+        <div class="player-wrap">
+            <div>
+                <label>SIM 卡号:</label>
+                <input type="text" id="sim" value="138001380000" placeholder="SIM卡号">
+                <label>通道号:</label>
+                <input type="number" id="channel" value="1" min="1" max="16" style="width:60px">
+                <label>格式:</label>
+                <select id="format">
+                    <option value="flv">FLV</option>
+                    <option value="mp4">fMP4</option>
+                    <option value="pcm">PCM</option>
+                    <option value="wav">WAV</option>
+                </select>
+                <button onclick="play()">▶ 播放</button>
+                <button onclick="stop()">⏹ 停止</button>
+            </div>
+            <video id="player" controls muted autoplay></video>
+            <div class="info" id="status">就绪</div>
+        </div>
+
+        <h3>直播端点列表</h3>
+        <div class="endpoints">
+            <div class="endpoint">GET /live.flv?sim=xxx&channel=1</div>
+            <div class="endpoint">GET /live.mp4?sim=xxx&channel=1</div>
+            <div class="endpoint">GET /live.pcm?sim=xxx&channel=1</div>
+            <div class="endpoint">GET /live.aac?sim=xxx&channel=1</div>
+            <div class="endpoint">GET /live.wav?sim=xxx&channel=1</div>
+            <div class="endpoint">WS /live.flv (WebSocket)</div>
+        </div>
+
+        <h3>录像回放端点</h3>
+        <div class="endpoints">
+            <div class="endpoint">GET /record.flv?sim=xxx&channel=1</div>
+            <div class="endpoint">GET /record.mp4?sim=xxx&channel=1</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flv.js@1.6.2/dist/flv.min.js"></script>
+    <script>
+        let player = null;
+
+        function getUrl() {
+            const sim = document.getElementById('sim').value;
+            const channel = document.getElementById('channel').value;
+            const format = document.getElementById('format').value;
+            return `/${format === 'mp4' ? 'live.mp4' : 'live.' + format}?sim=${sim}&channel=${channel}&token=demo`;
+        }
+
+        function play() {
+            stop();
+            const url = getUrl();
+            const fmt = document.getElementById('format').value;
+
+            document.getElementById('status').textContent = '⏳ 连接中... ' + url;
+
+            if (fmt === 'flv') {
+                if (!flvjs.isSupported()) {
+                    document.getElementById('status').textContent = '❌ 浏览器不支持 flv.js';
+                    return;
+                }
+                player = flvjs.createPlayer({ type: 'flv', url: url });
+                player.attachMediaElement(document.getElementById('player'));
+                player.load();
+                player.play();
+                player.on(flvjs.Events.ERROR, (e) => {
+                    document.getElementById('status').textContent = '❌ FLV 错误: ' + e;
+                });
+                document.getElementById('status').textContent = '▶ FLV 直播中...';
+            } else {
+                // 非 FLV 格式使用原生 video 不支持，显示提示
+                document.getElementById('status').textContent = 'ℹ️ ' + fmt.toUpperCase() + ' 格式需通过 fetch API 播放，请使用命令行工具测试';
+                document.getElementById('player').src = url;
+            }
+        }
+
+        function stop() {
+            if (player) {
+                player.pause();
+                player.unload();
+                player.detachMediaElement();
+                player.destroy();
+                player = null;
+            }
+            document.getElementById('status').textContent = '⏹ 已停止';
+        }
+    </script>
+</body>
+</html>

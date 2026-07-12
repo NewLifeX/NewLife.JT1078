@@ -1,4 +1,4 @@
-Ôªøusing NewLife.JT1078.Protocols;
+using NewLife.JT1078.Protocols;
 
 namespace NewLife.JT1078.H264
 {
@@ -17,7 +17,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.AsSpan();
+            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
             while (i < length)
             {
                 value = buffer[i++];
@@ -74,7 +74,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.AsSpan();
+            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
             while (i < length)
             {
                 value = buffer[i++];
@@ -157,7 +157,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.AsSpan();
+            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
             while (i < length)
             {
                 value = buffer[i++];
@@ -218,7 +218,7 @@ namespace NewLife.JT1078.H264
         /// <summary>
         /// Expunge any "Emulation Prevention" bytes from a "Raw Byte Sequence Payload"
         /// <see cref="https://blog.csdn.net/u011399342/article/details/80472084"/>
-        /// Èò≤Ê≠¢Á´û‰∫âÊèíÂÖ•0x03
+        /// ∑¿÷πæ∫’˘≤Â»Î0x03
         /// </summary>
         /// <param name="srcBuffer"></param>
         /// <returns></returns>

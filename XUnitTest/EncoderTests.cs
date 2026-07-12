@@ -40,7 +40,7 @@ public class EncoderTests
             DataType = DataTypes.VideoPFrame,
             PacketFlag = PacketFlags.Alone,
             Timestamp = 1000,
-            Payload = new Packet(new Byte[]
+            Payload = new ArrayPacket(new Byte[]
             {
                 0x00, 0x00, 0x01, 0x41, // 非关键帧 NAL
                 0x88, 0x84, 0x41, 0x9A,

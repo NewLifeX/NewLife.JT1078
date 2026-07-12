@@ -300,7 +300,7 @@ namespace NewLife.JT1078.Audio
             output[32] = (Byte)(bitDepth >> 3); //Bytes per sample
             output[34] = bitDepth; //Bits per sample
             Array.Copy(Encoding.ASCII.GetBytes("data"), 0, output, 36, 4);
-            WriteUint(40, (UInt32)output.Length, output); //Date size
+            WriteUint(40, (UInt32)input.Length, output); //Date size
             Array.Copy(input, 0, output, 44, input.Length);
             return output;
         }

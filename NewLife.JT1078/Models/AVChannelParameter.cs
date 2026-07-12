@@ -50,12 +50,13 @@ namespace NewLife.JT1078.Models
         }
     }
 
+    /// <summary>通道参数项。包含逻辑通道号及对应音视频参数</summary>
     public class AVChannelParameterItem
     {
-        /// <summary></summary>
+        /// <summary>逻辑通道号</summary>
         public Byte ChennalId { get; set; }
 
-        /// <summary></summary>
+        /// <summary>音视频参数</summary>
         public AVParameter Pasrameter { get; set; }
     }
 }

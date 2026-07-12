@@ -1,6 +1,6 @@
 using NewLife.JT1078.Protocols;
 
-namespace NewLife.JT1078.Server;
+namespace NewLife.JT1078.Protocols;
 
 /// <summary>消息处理接口。每个格式一个实现，瞬态注册</summary>
 public interface IMsgHandler

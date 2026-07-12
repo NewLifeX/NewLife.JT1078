@@ -12,16 +12,16 @@
         /// <summary>Http_FMp4</summary>
         Mp4,
 
-        /// <summary></summary>
+        /// <summary>PCM 原始音频格式</summary>
         Pcm,
 
-        /// <summary></summary>
+        /// <summary>AAC 音频格式</summary>
         Aac,
 
-        /// <summary></summary>
+        /// <summary>MP3 音频格式</summary>
         Mp3,
 
-        /// <summary>s</summary>
+        /// <summary>WAV 音频格式</summary>
         Wav,
     }
 }

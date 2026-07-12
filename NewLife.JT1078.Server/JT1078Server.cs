@@ -21,6 +21,9 @@ public class JT1078Server : NetServer<JT1078Session>
     /// <summary>服务提供者。用于创建依赖注入作用域</summary>
     public IServiceProvider ServiceProvider { get; set; }
 
+    /// <summary>设备命令总线。支持集群广播的设备会话管理器</summary>
+    public DeviceSessionManager DeviceManager { get; set; }
+
     /// <summary>实例化 JT1078 服务端</summary>
     public JT1078Server()
     {
@@ -37,6 +40,10 @@ public class JT1078Server : NetServer<JT1078Session>
         if (Setting.Debug) Log = XTrace.Log;
 
         Port = Setting.Port > 0 ? Setting.Port : 1078;
+
+        // 初始化设备命令总线
+        DeviceManager ??= new DeviceSessionManager(ServiceProvider);
+        DeviceManager.Init();
 
         base.OnStart();
 
