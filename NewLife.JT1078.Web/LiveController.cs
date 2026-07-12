@@ -10,17 +10,35 @@ namespace NewLife.JT1078.Web;
 public class LiveController : ControllerBase
 {
     private readonly SessionManager _sessionManager;
+    private readonly IJT1078Authorization _authorization;
 
     /// <summary>实例化直播控制器</summary>
-    public LiveController(SessionManager sessionManager)
+    public LiveController(SessionManager sessionManager, IJT1078Authorization authorization)
     {
         _sessionManager = sessionManager;
+        _authorization = authorization;
+    }
+
+    private Boolean Authorize(LiveModel model)
+    {
+        if (_authorization == null) return true;
+
+        var token = HttpContext.Request.Query["token"].FirstOrDefault()
+                    ?? HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.TrimStart("Bearer ".ToArray());
+
+        return _authorization.Authorize(model.SIM, token, HttpContext.Connection.RemoteIpAddress?.ToString());
     }
 
     /// <summary>HTTP-FLV 直播</summary>
     [Route("live.flv")]
     public async Task OnFlv([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
         if (context.WebSockets.IsWebSocketRequest)
             await ProcessWebSocket(context, model, RTPType.Flv);
@@ -32,6 +50,12 @@ public class LiveController : ControllerBase
     [Route("live.mp4")]
     public async Task OnMp4([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
         if (context.WebSockets.IsWebSocketRequest)
             await ProcessWebSocket(context, model, RTPType.Mp4);
@@ -43,6 +67,12 @@ public class LiveController : ControllerBase
     [Route("live.pcm")]
     public async Task OnPcm([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
         if (context.WebSockets.IsWebSocketRequest)
             await ProcessWebSocket(context, model, RTPType.Pcm);
@@ -54,6 +84,12 @@ public class LiveController : ControllerBase
     [Route("live.aac")]
     public async Task OnAac([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
         if (context.WebSockets.IsWebSocketRequest)
             await ProcessWebSocket(context, model, RTPType.Aac);
@@ -65,6 +101,12 @@ public class LiveController : ControllerBase
     [Route("live.wav")]
     public async Task OnWav([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
         if (context.WebSockets.IsWebSocketRequest)
             await ProcessWebSocket(context, model, RTPType.Wav);
