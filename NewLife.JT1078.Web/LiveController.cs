@@ -125,6 +125,17 @@ public class LiveController : ControllerBase
         await context.Response.WriteAsync("MP3 encoder not implemented. Need external MP3 codec library (e.g., LAME).");
     }
 
+    /// <summary>HLS 直播</summary>
+    /// <remarks>需要 HLS 封装库支持，当前返回 501 Not Implemented</remarks>
+    [Route("live.m3u8")]
+    public async Task OnHls([FromQuery] LiveModel model)
+    {
+        var context = HttpContext;
+        context.Response.StatusCode = 501;
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync("HLS packager not implemented. Need HLS library (m3u8 + TS segmenter).");
+    }
+
     private async Task ProcessWebSocket(HttpContext context, LiveModel model, RTPType type)
     {
         if (!context.WebSockets.IsWebSocketRequest) return;
