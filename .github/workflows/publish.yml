@@ -26,6 +26,9 @@ jobs:
         dotnet pack -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
         dotnet pack -c Release -o out NewLife.JT1078.Flv/NewLife.JT1078.Flv.csproj
         dotnet pack -c Release -o out NewLife.JT1078.FMp4/NewLife.JT1078.FMp4.csproj
+        dotnet pack -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
+        dotnet pack -c Release -o out NewLife.JT1078.Web/NewLife.JT1078.Web.csproj
+        dotnet pack -c Release -o out NewLife.JT1078.Web/NewLife.JT1078.Web.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}

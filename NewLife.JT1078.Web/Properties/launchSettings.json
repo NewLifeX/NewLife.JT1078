@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "NewLife.JT1078.Web": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:48131;http://localhost:48132"
+    }
+  }
+}

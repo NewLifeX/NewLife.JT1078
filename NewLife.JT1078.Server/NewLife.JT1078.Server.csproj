@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net6.0;net8.0</TargetFrameworks>
     <RootNamespace>NewLife.JT1078.Server</RootNamespace>
     <AssemblyTitle>JT1078 TCP服务端</AssemblyTitle>
     <Description>基于NewLife.Net的JT1078 TCP服务端，支持RTP分包合并和设备会话管理</Description>
@@ -42,10 +42,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
+    <ProjectReference Include="..\NewLife.JT1078.Flv\NewLife.JT1078.Flv.csproj" />
+    <ProjectReference Include="..\NewLife.JT1078.FMp4\NewLife.JT1078.FMp4.csproj" />
   </ItemGroup>
 
   <ItemGroup>

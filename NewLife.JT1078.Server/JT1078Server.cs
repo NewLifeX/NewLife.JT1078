@@ -18,6 +18,9 @@ public class JT1078Server : NetServer<JT1078Session>
     /// <summary>分包缓存。Key=SessionId-Channel-AVType，用于合并 RTP 分包</summary>
     public ICache Cache { get; set; } = MemoryCache.Instance;
 
+    /// <summary>服务提供者。用于创建依赖注入作用域</summary>
+    public IServiceProvider ServiceProvider { get; set; }
+
     /// <summary>实例化 JT1078 服务端</summary>
     public JT1078Server()
     {
