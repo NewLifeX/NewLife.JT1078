@@ -4,15 +4,15 @@
     public enum MediaFileKinds : Byte
     {
         /// <summary>音视频</summary>
-        音视频 = 0,
+        AudioVideo = 0,
 
         /// <summary>音频</summary>
-        音频 = 1,
+        Audio = 1,
 
         /// <summary>视频</summary>
-        视频 = 2,
+        Video = 2,
 
         /// <summary>视频或音视频</summary>
-        视频或音视频 = 3,
+        VideoOrAudioVideo = 3,
     }
 }

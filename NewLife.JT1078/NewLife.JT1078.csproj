@@ -1,13 +1,54 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45</TargetFrameworks>
+    <RootNamespace>NewLife.JT1078</RootNamespace>
+    <AssemblyTitle>JT1078核心协议</AssemblyTitle>
+    <Description>JT/T 1078 视频通讯协议核心实现，包括RTP报文解析、音视频编解码、H.264解析</Description>
+    <Company>新生命开发团队</Company>
+    <Copyright>©2022-2026 新生命开发团队</Copyright>
+    <VersionPrefix>1.0</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
+    <OutputPath>..\Bin</OutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <SignAssembly>False</SignAssembly>
+    <!--<AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>-->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <WarningsAsErrors>CA2007</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Authors>$(Company)</Authors>
+    <PackageProjectUrl>https://newlifex.com/iot</PackageProjectUrl>
+    <PackageIcon>leaf.png</PackageIcon>
+    <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>JT1078;1078;GB1078;音视频;视频通讯;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes>初版发布：核心RTP协议解析、音视频编解码、H.264解析</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.2.2023.401" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+    <PackageReference Include="NewLife.Core" Version="11.17.2026.701" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
+    <None Include="..\Readme.MD" Pack="True" PackagePath="\" />
   </ItemGroup>
 
 </Project>

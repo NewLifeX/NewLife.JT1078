@@ -85,11 +85,14 @@ namespace NewLife.JT1078.Protocols
 
         /// <summary>是否单向请求。单向请求无需等待响应</summary>
         [IgnoreDataMember]
-        Boolean IMessage.OneWay { get; }
+        Boolean IMessage.OneWay { get; set; }
 
         /// <summary>负载数据</summary>
         [IgnoreDataMember]
         public Packet Payload { get; set; }
+
+        /// <summary>负载数据（显式接口）</summary>
+        IPacket IMessage.Payload { get => Payload; set => Payload = value as Packet; }
         #endregion
 
         #region 读写
@@ -121,9 +124,9 @@ namespace NewLife.JT1078.Protocols
             DataType = (DataTypes)(Byte)(b >> 4);
             PacketFlag = (PacketFlags)(b & 0x0F);
 
-            if (DataType != DataTypes.透传数据) Timestamp = reader.Read<UInt64>();
+            if (DataType != DataTypes.Transparent) Timestamp = reader.Read<UInt64>();
 
-            if (DataType <= DataTypes.视频B帧)
+            if (DataType <= DataTypes.VideoBFrame)
             {
                 LastIFrameInterval = reader.ReadUInt16();
                 LastFrameInterval = reader.ReadUInt16();
@@ -172,9 +175,9 @@ namespace NewLife.JT1078.Protocols
             b = (Byte)(((Byte)DataType << 4) | (Byte)PacketFlag);
             writer.Write(b);
 
-            if (DataType != DataTypes.透传数据) writer.Write(Timestamp);
+            if (DataType != DataTypes.Transparent) writer.Write(Timestamp);
 
-            if (DataType <= DataTypes.视频B帧)
+            if (DataType <= DataTypes.VideoBFrame)
             {
                 writer.WriteUInt16(LastIFrameInterval);
                 writer.WriteUInt16(LastFrameInterval);
@@ -190,7 +193,11 @@ namespace NewLife.JT1078.Protocols
         /// <summary>读取数据包</summary>
         /// <param name="pk"></param>
         /// <returns></returns>
-        public Boolean Read(Packet pk) => Read(pk.GetStream(), null);
+        public Boolean Read(IPacket pk) => Read(pk.GetStream(), null);
+
+        /// <summary>转数据包</summary>
+        /// <returns></returns>
+        IPacket IMessage.ToPacket() => ToPacket();
 
         /// <summary>转数据包</summary>
         /// <returns></returns>
@@ -240,19 +247,21 @@ namespace NewLife.JT1078.Protocols
         /// <summary>获取数据包长度</summary>
         /// <param name="pk"></param>
         /// <returns></returns>
-        public static Int32 GetLength(Packet pk)
+        public static Int32 GetLength(IPacket pk)
         {
-            // 4+(Version)1+(Kind)1+(seq)2+(sim)6+(channel)1+(DataType)1
-            if (pk.Total < 16 + 2) return 0;
+            if (pk is not Packet p) return 0;
 
-            var dataType = (DataTypes)(pk[15] >> 4);
+            // 4+(Version)1+(Kind)1+(seq)2+(sim)6+(channel)1+(DataType)1
+            if (p.Total < 16 + 2) return 0;
+
+            var dataType = (DataTypes)(p[15] >> 4);
 
             // 头部长度
             var len = 4 + 1 + 1 + 2 + 6 + 1 + 1;
-            if (dataType != DataTypes.透传数据) len += 8;
-            if (dataType <= DataTypes.视频B帧) len += 2 + 2;
+            if (dataType != DataTypes.Transparent) len += 8;
+            if (dataType <= DataTypes.VideoBFrame) len += 2 + 2;
 
-            var pk2 = pk.Slice(len);
+            var pk2 = p.Slice(len);
             if (pk2.Total < 2) return 0;
 
             len += pk2.ReadUInt16(false);
@@ -263,6 +272,9 @@ namespace NewLife.JT1078.Protocols
         }
 
         public String GetKey() => $"{SIM}_{Channel}";
+
+        /// <summary>释放资源</summary>
+        public void Dispose() { }
 
         /// <summary>已重写。返回友好文本</summary>
         /// <returns></returns>

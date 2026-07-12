@@ -81,7 +81,7 @@ namespace NewLife.JT1078.Audio
             while (true)
             {
                 // 读取一帧数据
-                var count = await inStream.ReadAsync(input, 0, input.Length);
+                var count = await inStream.ReadAsync(input, 0, input.Length).ConfigureAwait(false);
                 if (count == 0) break;
 
                 var buf = input;
@@ -91,7 +91,7 @@ namespace NewLife.JT1078.Audio
                 var len = FaacEncEncode(_handle, buf, InputSamples, output, output.Length);
 
                 // 写入结果
-                if (len > 0) await outStream.WriteAsync(output, 0, len);
+                if (len > 0) await outStream.WriteAsync(output, 0, len).ConfigureAwait(false);
 
                 rs += len;
             }

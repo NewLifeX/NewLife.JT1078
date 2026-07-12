@@ -197,7 +197,7 @@ public class FlvEncoder
     /// <returns></returns>
     public Byte[] EncoderVideoTag(JTMessage package, Boolean needVideoHeader = false, Boolean hasAudio = false)
     {
-        if (package.DataType == DataTypes.音频帧) return default;
+        if (package.DataType == DataTypes.AudioFrame) return default;
 
         var buffer = FlvArrayPool.Rent(package.Payload.Total * 2 + 4096);
         var flvMessagePackWriter = new FlvMessagePackWriter(buffer);
@@ -260,7 +260,7 @@ public class FlvEncoder
     /// <returns></returns>
     public Byte[] EncoderAudioTag(JTMessage package, Boolean needAacHeader = false)
     {
-        if (package.DataType != DataTypes.音频帧) throw new Exception("Incorrect parameter, package must be audio frame");
+        if (package.DataType != DataTypes.AudioFrame) throw new Exception("Incorrect parameter, package must be audio frame");
 
         var flvMessagePackWriter = new FlvMessagePackWriter(new Byte[65536]);
         if (needAacHeader)

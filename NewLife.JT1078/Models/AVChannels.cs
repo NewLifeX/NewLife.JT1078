@@ -2,11 +2,11 @@
 {
     public class AVChannels
     {
-        public Byte 音视频通道总数 { get; set; }
+        public Byte TotalAVChannels { get; set; }
 
-        public Byte 音频通道总数 { get; set; }
+        public Byte TotalAudioChannels { get; set; }
 
-        public Byte 视频通道总数 { get; set; }
+        public Byte TotalVideoChannels { get; set; }
 
         public AVChannel[] Channels { get; set; }
     }

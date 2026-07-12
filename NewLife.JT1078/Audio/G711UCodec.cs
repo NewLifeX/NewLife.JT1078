@@ -82,6 +82,16 @@
 
         public Byte[] ToPcm(ReadOnlySpan<Byte> audio, IAudioAttachData audioAttachData) => UlawToPcm16(audio);
 
-        public Byte[] FromPcm(ReadOnlySpan<Byte> pcm, IAudioAttachData audioAttachData) => throw new NotImplementedException();
+        public Byte[] FromPcm(ReadOnlySpan<Byte> pcm, IAudioAttachData audioAttachData)
+        {
+            var sampleCount = pcm.Length / 2;
+            var ulawSamples = new Byte[sampleCount];
+            for (var i = 0; i < sampleCount; i++)
+            {
+                var sample = (Int16)(pcm[i * 2] | (pcm[i * 2 + 1] << 8));
+                ulawSamples[i] = linearToUlawTable[sample & 0xffff];
+            }
+            return ulawSamples;
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace NewLife.JT1078.FMp4.Samples
 #if DEBUG
         public String CompressorName { get; set; }
 #else
-    public string CompressorName { get; set; } = "NewLife.JT1078";
+    public String CompressorName { get; set; } = "NewLife.JT1078";
 #endif
         public UInt16 Depth { get; set; } = 0x0018;
 

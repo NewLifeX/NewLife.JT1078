@@ -4,7 +4,7 @@ using NewLife.JT1078.Serialization;
 namespace NewLife.JT1078.Models
 {
     /// <summary>平台下发远程录像回放控制</summary>
-    [MessageKind(MessageKinds.录像回放控制)]
+    [MessageKind(MessageKinds.PlaybackControl)]
     public class T9202
     {
         /// <summary>逻辑通道号</summary>

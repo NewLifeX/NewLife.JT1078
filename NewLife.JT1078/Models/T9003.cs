@@ -3,7 +3,7 @@
 namespace NewLife.JT1078.Models
 {
     /// <summary>查询终端音视频属性</summary>
-    [MessageKind(MessageKinds.查询终端音视频属性)]
+    [MessageKind(MessageKinds.QueryAVAttribute)]
     public class T9003
     {
     }

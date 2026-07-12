@@ -3,7 +3,7 @@
 namespace NewLife.JT1078.Models
 {
     /// <summary>音视频实时传输控制</summary>
-    [MessageKind(MessageKinds.音视频传输控制)]
+    [MessageKind(MessageKinds.AVTransmitControl)]
     public class T9102
     {
         /// <summary>逻辑通道号</summary>

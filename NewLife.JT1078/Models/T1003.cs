@@ -3,7 +3,7 @@
 namespace NewLife.JT1078.Models
 {
     /// <summary>终端上传音视频熟悉</summary>
-    [MessageKind(MessageKinds.终端上传音视频属性)]
+    [MessageKind(MessageKinds.UploadAVAttribute)]
     public class T1003
     {
         /// <summary>音频编码方式</summary>

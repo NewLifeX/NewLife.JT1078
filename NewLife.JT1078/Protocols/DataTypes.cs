@@ -2,10 +2,10 @@
 {
     public enum DataTypes : Byte
     {
-        视频I帧 = 0,
-        视频P帧 = 1,
-        视频B帧 = 2,
-        音频帧 = 3,
-        透传数据 = 4,
+        VideoIFrame = 0,
+        VideoPFrame = 1,
+        VideoBFrame = 2,
+        AudioFrame = 3,
+        Transparent = 4,
     }
 }

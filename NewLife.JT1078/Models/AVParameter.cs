@@ -32,13 +32,13 @@
     [Flags]
     public enum OSDFlags : UInt16
     {
-        日期和时间 = 1 << 0,
-        车牌号码 = 1 << 1,
-        逻辑通道号 = 1 << 2,
-        经纬度 = 1 << 3,
-        行驶记录速度 = 1 << 4,
-        卫星定位速度 = 1 << 5,
-        连续驾驶时间 = 1 << 6,
+        DateTime = 1 << 0,
+        PlateNumber = 1 << 1,
+        LogicalChannel = 1 << 2,
+        LongitudeLatitude = 1 << 3,
+        DrivingSpeed = 1 << 4,
+        GpsSpeed = 1 << 5,
+        ContinuousDrivingTime = 1 << 6,
     }
 
     /// <summary>音视频参数</summary>
@@ -52,7 +52,7 @@
         /// 2：ABR（平均码率）；
         /// 100～127：自定义
         /// </remarks>
-        public AVCodecModes 实时流编码模式 { get; set; }
+        public AVCodecModes RealtimeCodecMode { get; set; }
 
         /// <summary>实时流分辨率</summary>
         /// <remarks>
@@ -65,43 +65,43 @@
         /// 6：1080P；
         /// 100～127：自定义
         /// </remarks>
-        public AVCodecRates 实时流分辨率 { get; set; }
+        public AVCodecRates RealtimeResolution { get; set; }
 
         /// <summary>实时流关键帧间隔</summary>
         /// <remarks>范围 1～1000 帧</remarks>
-        public UInt16 实时流关键帧间隔 { get; set; }
+        public UInt16 RealtimeKeyFrameInterval { get; set; }
 
         /// <summary>实时流目标帧率</summary>
         /// <remarks>范围（1～120）帧/秒</remarks>
-        public Byte 实时流目标帧率 { get; set; }
+        public Byte RealtimeTargetFps { get; set; }
 
         /// <summary>实时流目标码率</summary>
         /// <remarks>单位为千位每秒（kbps）</remarks>
-        public UInt32 实时流目标码率 { get; set; }
+        public UInt32 RealtimeTargetBitrate { get; set; }
 
         /// <summary>存储流编码模式</summary>
-        public AVCodecModes 存储流编码模式 { get; set; }
+        public AVCodecModes StorageCodecMode { get; set; }
 
         /// <summary>存储流分辨率</summary>
-        public AVCodecRates 存储流分辨率 { get; set; }
+        public AVCodecRates StorageResolution { get; set; }
 
         /// <summary>存储流关键帧间隔</summary>
         /// <remarks>范围 1～1000 帧</remarks>
-        public UInt16 存储流关键帧间隔 { get; set; }
+        public UInt16 StorageKeyFrameInterval { get; set; }
 
         /// <summary>存储流目标帧率</summary>
         /// <remarks>范围（1～120）帧/秒</remarks>
-        public Byte 存储流目标帧率 { get; set; }
+        public Byte StorageTargetFps { get; set; }
 
         /// <summary>存储流目标码率</summary>
         /// <remarks>单位为千位每秒（kbps）</remarks>
-        public UInt32 存储流目标码率 { get; set; }
+        public UInt32 StorageTargetBitrate { get; set; }
 
         /// <summary>OSD字幕叠加设置</summary>
-        public OSDFlags OSD字幕叠加设置 { get; set; }
+        public OSDFlags OSDSettings { get; set; }
 
         /// <summary>是否启用音频输出</summary>
-        public Byte 是否启用音频输出 { get; set; }
+        public Byte AudioOutputEnabled { get; set; }
         #endregion
     }
 }

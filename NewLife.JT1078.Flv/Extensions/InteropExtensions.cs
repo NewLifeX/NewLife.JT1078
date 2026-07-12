@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace JT1078.Flv.Extensions
+namespace NewLife.JT1078.Flv.Extensions
 {
     public static class InteropExtensions
     {

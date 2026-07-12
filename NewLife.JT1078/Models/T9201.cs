@@ -4,7 +4,7 @@ using NewLife.JT1078.Serialization;
 namespace NewLife.JT1078.Models
 {
     /// <summary>平台下发远程录像回放请求</summary>
-    [MessageKind(MessageKinds.录像回放请求)]
+    [MessageKind(MessageKinds.PlaybackRequest)]
     public class T9201
     {
         /// <summary>服务器IP</summary>

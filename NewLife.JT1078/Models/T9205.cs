@@ -4,7 +4,7 @@ using NewLife.JT1078.Serialization;
 namespace NewLife.JT1078.Models
 {
     /// <summary>查询资源列表</summary>
-    [MessageKind(MessageKinds.查询资源列表)]
+    [MessageKind(MessageKinds.QueryResourceList)]
     public class T9205
     {
         /// <summary>逻辑通道号</summary>

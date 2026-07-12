@@ -4,7 +4,7 @@ using NewLife.JT1078.Protocols;
 namespace NewLife.JT1078.Models
 {
     /// <summary>实时音视频传输请求</summary>
-    [MessageKind(MessageKinds.音视频传输请求)]
+    [MessageKind(MessageKinds.AVTransmitRequest)]
     public class T9101
     {
         /// <summary>服务器IP</summary>
