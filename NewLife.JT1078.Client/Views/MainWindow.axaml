@@ -32,30 +32,37 @@
         <Grid ColumnDefinitions="160,*" RowDefinitions="*" Grid.Row="1">
             <!-- 左侧 Tab 导航 -->
             <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="0,0,1,0" Padding="5">
-                <ItemsControl ItemsSource="{Binding Tabs}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding}"
-                                    Margin="2"
-                                    Padding="10,8"
-                                    HorizontalContentAlignment="Left"
-                                    Command="{Binding $parent[Window].DataContext.SelectTabCommand}"
-                                    CommandParameter="{Binding $parent[ItemsControl].ItemIndex, RelativeSource={RelativeSource Self}}">
-                                <Button.Styles>
-                                    <Style Selector="Button">
-                                        <Setter Property="Background" Value="Transparent" />
-                                        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
-                                    </Style>
-                                </Button.Styles>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <StackPanel>
+                    <Button Content="直播拉流" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="0"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                    <Button Content="录像回放" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="1"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                    <Button Content="设备命令" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="2"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                    <Button Content="TCP 直连" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="3"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                    <Button Content="UDP 直连" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="4"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                    <Button Content="状态监控" Margin="2" Padding="10,8"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding SelectTabCommand}" CommandParameter="5"
+                            Background="Transparent" Foreground="{DynamicResource SystemAccentColor}" />
+                </StackPanel>
             </Border>
 
             <!-- 右侧内容区 -->
             <ScrollViewer Grid.Column="1" Padding="10">
-                <Carousel SelectedIndex="{Binding SelectedTab}" Transition="None">
+                <Carousel SelectedIndex="{Binding SelectedTab}">
                     <!-- Tab 0: 直播拉流 -->
                     <views:LiveStreamView DataContext="{Binding LiveStreamVM}" />
 

@@ -49,7 +49,7 @@
         <Border Grid.Row="1" Grid.Column="1" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="5,0,0,5">
             <StackPanel Spacing="8">
                 <TextBlock FontWeight="Bold" FontSize="14">消息记录</TextBlock>
-                <ListBox ItemsSource="{Binding Messages}" Height="250">
+                <ListBox ItemsSource="{Binding Messages}" SelectedItem="{Binding SelectedMessage}" Height="250">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Border Padding="4" Margin="0,1">
@@ -71,7 +71,29 @@
 
         <!-- 解析详情 -->
         <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
-            <TextBlock Text="选中消息后此处显示解析详情" Foreground="#666" />
+            <ScrollViewer>
+                <StackPanel Spacing="4" DataContext="{Binding SelectedDecodedMessage}">
+                    <TextBlock FontWeight="Bold" FontSize="14" Text="{Binding KindName, FallbackValue='协议指令解码'}" />
+                    <TextBlock Text="{Binding Description, FallbackValue='在上方消息列表中选中已解码消息查看详情'}" Foreground="#888" />
+                    <ItemsControl ItemsSource="{Binding Fields}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1a1a2e" Padding="6" Margin="0,2" CornerRadius="3">
+                                    <Grid ColumnDefinitions="140,*,Auto">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#e94560" />
+                                            <TextBlock Text="{Binding Description}" Foreground="#888" FontSize="11" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="#eee" />
+                                        <TextBlock Grid.Column="2" Text="{Binding RawHex}" Foreground="#666" FontSize="11" FontFamily="Consolas"
+                                                   IsVisible="{Binding RawHex, Converter={x:Static converters:StringConverters.IsNotNullOrEmpty}}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- 状态栏 -->

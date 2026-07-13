@@ -55,6 +55,22 @@ public partial class TcpTestViewModel : ObservableObject
     /// <summary>接收消息列表</summary>
     public ObservableCollection<MessageLogEntry> Messages { get; } = [];
 
+    /// <summary>解码后的协议指令消息列表</summary>
+    public ObservableCollection<DecodedMessage> DecodedMessages { get; } = [];
+
+    /// <summary>当前选中的解码消息</summary>
+    [ObservableProperty]
+    private DecodedMessage? _selectedDecodedMessage;
+
+    /// <summary>当前选中的消息日志条目</summary>
+    [ObservableProperty]
+    private MessageLogEntry? _selectedMessage;
+
+    partial void OnSelectedMessageChanged(MessageLogEntry? value)
+    {
+        SelectedDecodedMessage = value?.DecodedMessage;
+    }
+
     /// <summary>可用 AVTypes</summary>
     public String[] AVTypes { get; } = ["G711A", "G711U", "ADPCMA", "AAC", "H264", "H265", "MP3", "Transparent"];
 
@@ -227,12 +243,44 @@ public partial class TcpTestViewModel : ObservableObject
 
     private void OnMessageReceived(JTMessage msg)
     {
+        var summary = $"{msg.Type} {msg.DataType} Seq={msg.Sequence} SIM={msg.SIM} CH={msg.Channel}";
+        var hexData = "";
+        var msgType = "JTMessage";
+
+        // 尝试解码协议指令
+        DecodedMessage? decoded = null;
+        if (msg.Payload != null && msg.Payload.Total > 0)
+        {
+            var payload = msg.Payload.GetSpan().ToArray();
+            hexData = BitConverter.ToString(payload, 0, Math.Min(64, payload.Length));
+
+            // 透传数据类型通常包含协议指令
+            if (msg.DataType == Protocols.DataTypes.Transparent || payload.Length >= 2)
+            {
+                decoded = ProtocolDecoder.Decode(payload);
+                if (decoded != null && decoded.IsParsed)
+                {
+                    summary = $"← [{decoded.KindName}] {decoded.Description}";
+                    msgType = decoded.KindName;
+                }
+            }
+        }
+
         Messages.Insert(0, new MessageLogEntry
         {
             Direction = "← 接收",
-            Summary = $"{msg.Type} {msg.DataType} Seq={msg.Sequence} SIM={msg.SIM} CH={msg.Channel}",
-            MessageType = "JTMessage",
+            Summary = summary,
+            HexData = hexData,
+            MessageType = msgType,
+            DecodedMessage = decoded,
         });
+
+        // 添加到解码消息列表
+        if (decoded != null && decoded.IsParsed)
+        {
+            DecodedMessages.Insert(0, decoded);
+            SelectedDecodedMessage = decoded;
+        }
     }
 
     private void OnConnectionChanged(Boolean connected)

@@ -20,4 +20,7 @@ public class MessageLogEntry
 
     /// <summary>日志级别</summary>
     public String Level { get; set; } = "Info";
+
+    /// <summary>解码后的协议指令消息（如有）</summary>
+    public DecodedMessage? DecodedMessage { get; set; }
 }

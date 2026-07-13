@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             xmlns:dg="using:Avalonia.Controls"
              x:Class="NewLife.JT1078.Client.Views.StatusView"
              x:DataType="vm:StatusViewModel">
     <Grid RowDefinitions="Auto,Auto,*">
@@ -25,10 +26,10 @@
             </StackPanel>
         </Border>
 
-        <!-- 设备列表表格 -->
+        <!-- 设备列表 -->
         <Border Grid.Row="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="0">
-            <DataGrid ItemsSource="{Binding Devices}" AutoGenerateColumns="True"
-                      IsReadOnly="True" Margin="5" />
+            <dg:DataGrid ItemsSource="{Binding Devices}" AutoGenerateColumns="True"
+                         IsReadOnly="True" Margin="5" />
         </Border>
     </Grid>
 </UserControl>

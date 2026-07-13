@@ -152,4 +152,130 @@ public class ClientTests
         Assert.Equal("192.168.1.100:1078", device.Remote);
         Assert.Equal("TCP", device.Type);
     }
+
+    [Fact(DisplayName = "ProtocolDecoder 解码 T9101 实时音视频传输请求")]
+    public void ProtocolDecoder_DecodeT9101()
+    {
+        // T9101 二进制：ServerIP(4) + TcpPort(2) + UdpPort(2) + Channel(1) + MediaKind(1) + CodeStream(1)
+        // IP 192.168.1.100, TCP 1078, UDP 1078, CH=1, MediaKind=0(音视频), CodeStream=0(主码流)
+        var payload = new Byte[]
+        {
+            0x91, 0x01, // MessageKind=0x9101
+            0xC0, 0xA8, 0x01, 0x64, // 192.168.1.100
+            0x04, 0x36, // TCP 1078
+            0x04, 0x36, // UDP 1078
+            0x01, // Channel
+            0x00, // MediaKind
+            0x00, // CodeStream
+        };
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode(payload);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(NewLife.JT1078.Protocols.MessageKinds.AVTransmitRequest, decoded.Kind);
+        Assert.True(decoded.IsParsed);
+        Assert.Equal("平台请求实时音视频传输", decoded.Description);
+
+        // 验证各字段
+        Assert.Contains(decoded.Fields, f => f.Name == "Server" && f.Value == "192.168.1.100");
+        Assert.Contains(decoded.Fields, f => f.Name == "TcpPort" && f.Value == "1078");
+        Assert.Contains(decoded.Fields, f => f.Name == "UdpPort" && f.Value == "1078");
+        Assert.Contains(decoded.Fields, f => f.Name == "Channel" && f.Value == "0x01 (1)");
+    }
+
+    [Fact(DisplayName = "ProtocolDecoder 解码 T9201 远程录像回放请求")]
+    public void ProtocolDecoder_DecodeT9201()
+    {
+        // T9201: ServerIP(4) + TcpPort(2) + UdpPort(2) + Channel(1) + FileKind(1) + CodeStream(1) + StorageKind(1) + Mode(1) + Multiple(1) + StartTime(6) + EndTime(6)
+        var payload = new Byte[]
+        {
+            0x92, 0x01, // MessageKind=0x9201
+            0xC0, 0xA8, 0x01, 0x64, // 192.168.1.100
+            0x04, 0x36, // TCP 1078
+            0x04, 0x36, // UDP 1078
+            0x01, // Channel
+            0x00, // FileKind
+            0x00, // CodeStream
+            0x00, // StorageKind
+            0x00, // Mode
+            0x00, // Multiple
+            0x24, 0x07, 0x14, 0x15, 0x30, 0x00, // StartTime BCD: 240714153000
+            0x24, 0x07, 0x14, 0x16, 0x30, 0x00, // EndTime BCD: 240714163000
+        };
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode(payload);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(NewLife.JT1078.Protocols.MessageKinds.PlaybackRequest, decoded.Kind);
+        Assert.True(decoded.IsParsed);
+
+        // 验证时间解析（BCD → 可读时间）
+        var startField = decoded.Fields.FirstOrDefault(f => f.Name == "StartTime");
+        Assert.NotNull(startField);
+        Assert.Contains("2024-07-14", startField.Value);
+    }
+
+    [Fact(DisplayName = "ProtocolDecoder 解码 T9102 音视频实时传输控制")]
+    public void ProtocolDecoder_DecodeT9102()
+    {
+        // T9102: Channel(1) + Command(1) + CloseKind(1) + CodeStream(1)
+        var payload = new Byte[]
+        {
+            0x91, 0x02, // MessageKind=0x9102
+            0x01, // Channel
+            0x00, // Command=0 (关闭音视频)
+            0x00, // CloseKind=0 (关闭音视频数据)
+            0x00, // CodeStream
+        };
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode(payload);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(NewLife.JT1078.Protocols.MessageKinds.AVTransmitControl, decoded.Kind);
+        Assert.True(decoded.IsParsed);
+        Assert.Equal(4, decoded.Fields.Count);
+    }
+
+    [Fact(DisplayName = "ProtocolDecoder 解码 T9003 空体消息")]
+    public void ProtocolDecoder_DecodeT9003()
+    {
+        // T9003 空体消息：只有 MessageKind 头
+        var payload = new Byte[] { 0x90, 0x03 };
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode(payload);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(NewLife.JT1078.Protocols.MessageKinds.QueryAVAttribute, decoded.Kind);
+        Assert.True(decoded.IsParsed);
+        Assert.Empty(decoded.Fields);
+    }
+
+    [Fact(DisplayName = "ProtocolDecoder 未知消息返回未解析状态")]
+    public void ProtocolDecoder_UnknownKind()
+    {
+        // 未知的 MessageKind
+        var payload = new Byte[] { 0xFF, 0xFF, 0x01, 0x02, 0x03 };
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode(payload);
+
+        Assert.NotNull(decoded);
+        Assert.False(decoded.IsParsed);
+        // 未知类型的 KindName 为数值字符串
+        Assert.NotNull(decoded.KindName);
+    }
+
+    [Fact(DisplayName = "ProtocolDecoder 空数据返回未解析")]
+    public void ProtocolDecoder_EmptyData()
+    {
+        var decoded = NewLife.JT1078.Client.Services.ProtocolDecoder.Decode([]);
+
+        Assert.NotNull(decoded);
+        Assert.False(decoded.IsParsed);
+    }
+
+    [Fact(DisplayName = "MessageKindResolver 列出已知类型")]
+    public void ProtocolDecoder_GetKnownKinds()
+    {
+        var kinds = NewLife.JT1078.Client.Services.ProtocolDecoder.GetKnownKinds();
+
+        Assert.NotEmpty(kinds);
+        Assert.Contains(NewLife.JT1078.Protocols.MessageKinds.AVTransmitRequest, kinds);
+        Assert.Contains(NewLife.JT1078.Protocols.MessageKinds.PlaybackRequest, kinds);
+        Assert.Contains(NewLife.JT1078.Protocols.MessageKinds.QueryAVAttribute, kinds);
+    }
 }
