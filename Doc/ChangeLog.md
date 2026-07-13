@@ -31,10 +31,15 @@ NewLife.JT1078 首个正式版发布，覆盖 JT/T 1078 视频通讯协议全链
 
 | 包名 | 说明 |
 |------|------|
-| NewLife.JT1078 | 核心协议 + 编解码 |
-| NewLife.JT1078.Flv | FLV 转封装 |
-| NewLife.JT1078.FMp4 | fMP4 转封装 |
-| NewLife.JT1078.Server | TCP/UDP 服务端 |
+| NewLife.JT1078 | 核心协议 + 编解码 + FLV/fMP4 转封装 |
+
+### 🔄 架构重构
+
+- **合并 Flv/FMp4 到核心库**：`NewLife.JT1078.Flv` 和 `NewLife.JT1078.FMp4` 两个独立项目合并到核心项目，减少项目数量
+- **引入 NewLife.Audio/Video 包**：用 NuGet beta 包替代本地项目引用，音频编解码和视频容器由外部统一提供
+- **H264 代码去重**：`ExpGolombReader`/`NALUHeader` 统一使用 `NewLife.Video.Codecs`，消除两份重复代码
+- **升级依赖链**：Core/Audio/Video 统一使用 beta 版本，依赖链一致
+- **Server/Web 不再发布 NuGet**：仅 `NewLife.JT1078` 核心包发布到 NuGet.org
 
 ### ⚠️ 已知限制
 
