@@ -20,8 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
-    <ProjectReference Include="..\NewLife.JT1078.Flv\NewLife.JT1078.Flv.csproj" />
-    <ProjectReference Include="..\NewLife.JT1078.FMp4\NewLife.JT1078.FMp4.csproj" />
     <ProjectReference Include="..\NewLife.JT1078.Server\NewLife.JT1078.Server.csproj" />
   </ItemGroup>
 

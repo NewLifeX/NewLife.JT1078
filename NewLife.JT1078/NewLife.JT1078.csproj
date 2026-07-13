@@ -33,7 +33,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;1078;GB1078;音视频;视频通讯;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>v1.0 正式版：RTP协议解析、G711/ADPCM编解码、H.264解析、集群命令下发总线</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：RTP协议解析、G711/ADPCM编解码、H.264解析、FLV/fMP4转封装、集群命令下发总线</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,11 +44,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
-    <PackageReference Include="NewLife.Core" Version="11.17.2026.701" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
+    <PackageReference Include="NewLife.Core" Version="11.17.2026.713-beta0213" />
+    <PackageReference Include="NewLife.Audio" Version="1.1.2026.713-beta0641" />
+    <PackageReference Include="NewLife.Video" Version="1.1.2026.713-beta0750" />
   </ItemGroup>
 
   <ItemGroup>

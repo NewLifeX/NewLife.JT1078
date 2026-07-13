@@ -25,32 +25,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>$(AssemblyName)</PackageId>
-    <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://newlifex.com/iot</PackageProjectUrl>
-    <PackageIcon>leaf.png</PackageIcon>
-    <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>JT1078;Server;TCP;音视频;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>v1.0 正式版：TCP/UDP双栈服务端，HTTP/WS直播，集群命令下发，流媒体授权，DI构建器</PackageReleaseNotes>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
-    <ProjectReference Include="..\NewLife.JT1078.Flv\NewLife.JT1078.Flv.csproj" />
-    <ProjectReference Include="..\NewLife.JT1078.FMp4\NewLife.JT1078.FMp4.csproj" />
-    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>

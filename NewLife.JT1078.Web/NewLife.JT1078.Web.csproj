@@ -24,25 +24,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>$(AssemblyName)</PackageId>
-    <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://newlifex.com/iot</PackageProjectUrl>
-    <PackageIcon>leaf.png</PackageIcon>
-    <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageTags>JT1078;Web;直播;HTTP;WebSocket;音视频;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>初版发布：HTTP-FLV/fMP4 直播端点</PackageReleaseNotes>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078.Server\NewLife.JT1078.Server.csproj" />
