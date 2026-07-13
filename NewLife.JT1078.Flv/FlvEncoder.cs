@@ -1,4 +1,5 @@
-﻿using NewLife.JT1078.Audio;
+﻿using NewLife.Audio;
+using NewLife.Audio.AAC;
 using NewLife.JT1078.Flv.Enums;
 using NewLife.JT1078.Flv.MessagePack;
 using NewLife.JT1078.Flv.Metadata;
@@ -269,15 +270,13 @@ public class FlvEncoder
         }
 
         // 编码成功，此时为一帧aac音频数据
-        var buf = package.Payload;
-        var raw = new Byte[buf.Total];
-        for (var i = 0; i < buf.Total; i++)
-            raw[i] = buf[i];
-        var pcm = audioCodecFactory.ToPcm(package.Type, raw);
-        if (pcm != null && pcm.Length > 0)
+        var pcm = audioCodecFactory.ToPcm((NewLife.Audio.AVTypes)package.Type, package.Payload);
+        if (pcm != null && pcm.Total > 0)
         {
+            var pcmBytes = new Byte[pcm.Total];
+            for (var i = 0; i < pcmBytes.Length; i++) pcmBytes[i] = pcm[i];
             var aacFrameData = new Byte[4096];
-            var count = _faacEncoder.Encode(pcm, aacFrameData);
+            var count = _faacEncoder.Encode(pcmBytes, aacFrameData);
             if (count > 0)
             {
                 // Data Tag Frame

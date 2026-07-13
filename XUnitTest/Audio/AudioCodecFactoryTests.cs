@@ -1,5 +1,6 @@
-using NewLife.JT1078.Audio;
-using NewLife.JT1078.Protocols;
+using NewLife.Audio;
+using NewLife.Audio.Codecs;
+using NewLife.Data;
 using Xunit;
 
 namespace XUnitTest.Audio;
@@ -26,7 +27,7 @@ public class AudioCodecFactoryTests
         var decoded = factory.ToPcm(AVTypes.G711A, g711a);
 
         Assert.NotNull(decoded);
-        Assert.Equal(samples * 2, decoded.Length);
+        Assert.Equal(samples * 2, decoded.Total);
     }
 
     [Fact(DisplayName = "工厂 ToPcm G711U 分发")]
@@ -48,7 +49,7 @@ public class AudioCodecFactoryTests
         var decoded = factory.ToPcm(AVTypes.G711U, g711u);
 
         Assert.NotNull(decoded);
-        Assert.Equal(samples * 2, decoded.Length);
+        Assert.Equal(samples * 2, decoded.Total);
     }
 
     [Fact(DisplayName = "工厂 ToPcm ADPCMA 分发")]
@@ -71,7 +72,7 @@ public class AudioCodecFactoryTests
         var decoded = factory.ToPcm(AVTypes.ADPCMA, adpcm);
 
         Assert.NotNull(decoded);
-        Assert.True(decoded.Length > 0);
+        Assert.True(decoded.Total > 0);
     }
 
     [Fact(DisplayName = "工厂 FromPcm G711A 分发")]
@@ -88,9 +89,9 @@ public class AudioCodecFactoryTests
             pcm[i * 2 + 1] = (Byte)((s >> 8) & 0xFF);
         }
 
-        var encoded = factory.FromPcm(AVTypes.G711A, pcm);
+        var encoded = factory.FromPcm(AVTypes.G711A, new ArrayPacket(pcm));
         Assert.NotNull(encoded);
-        Assert.Equal(samples, encoded.Length);
+        Assert.Equal(samples, encoded.Total);
     }
 
     [Fact(DisplayName = "工厂 海思头+编解码往返")]
@@ -108,7 +109,7 @@ public class AudioCodecFactoryTests
         }
 
         // 通过工厂编码 + 海思头
-        var encoded = factory.FromPcm(AVTypes.G711A, pcm);
+        var encoded = factory.FromPcm(AVTypes.G711A, new ArrayPacket(pcm));
         Assert.NotNull(encoded);
 
         // 工厂标注了海思头后，解码应能正确去除
@@ -121,8 +122,8 @@ public class AudioCodecFactoryTests
     {
         var factory = new AudioCodecFactory();
 
-        Assert.Throws<NotSupportedException>(() => factory.ToPcm(AVTypes.H264, new Byte[10]));
-        Assert.Throws<NotSupportedException>(() => factory.FromPcm(AVTypes.H264, new Byte[10]));
+        Assert.Throws<NotSupportedException>(() => factory.ToPcm(AVTypes.H264, new ArrayPacket(new Byte[10])));
+        Assert.Throws<NotSupportedException>(() => factory.FromPcm(AVTypes.H264, new ArrayPacket(new Byte[10])));
     }
 
     [Fact(DisplayName = "工厂 AddHI 添加海思头")]
@@ -130,9 +131,9 @@ public class AudioCodecFactoryTests
     {
         var factory = new AudioCodecFactory();
         var data = new Byte[] { 0x11, 0x22, 0x33, 0x44 };
-        var result = factory.AddHI(data);
+        var result = factory.AddHI(new ArrayPacket(data));
 
-        Assert.Equal(8, result.Length);
+        Assert.Equal(8, result.Total);
         Assert.Equal(0x00, result[0]);
         Assert.Equal(0x01, result[1]);
         Assert.Equal(0x02, result[2]); // data.Length/2 = 2

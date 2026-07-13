@@ -1,4 +1,6 @@
-using NewLife.JT1078.Audio;
+using NewLife.Audio;
+using NewLife.Audio.Codecs;
+using NewLife.Data;
 using Xunit;
 
 namespace XUnitTest.Audio;
@@ -23,18 +25,20 @@ public class AudioCodecTests
         // 编码 PCM → G711A
         var g711a = codec.FromPcm(pcm, null!);
         Assert.NotNull(g711a);
-        Assert.Equal(samples, g711a.Length);
+        Assert.Equal(samples, g711a.Total);
 
         // 解码 G711A → PCM
-        var pcm2 = codec.ToPcm(g711a, null!);
+        var pcm2 = codec.ToPcm(g711a.GetSpan(), null!);
         Assert.NotNull(pcm2);
-        Assert.Equal(samples * 2, pcm2.Length);
+        Assert.Equal(samples * 2, pcm2.Total);
 
         // 验证失真在合理范围（G711 是 8bit 压缩，8k 采样，允许 ±2 误差）
+        var pcmBytes = new Byte[pcm2.Total];
+        for (var i = 0; i < pcmBytes.Length; i++) pcmBytes[i] = pcm2[i];
         var maxError = 0;
         for (var i = 0; i < samples * 2; i++)
         {
-            var err = Math.Abs(pcm[i] - pcm2[i]);
+            var err = Math.Abs(pcm[i] - pcmBytes[i]);
             if (err > maxError) maxError = err;
         }
         Assert.True(maxError <= 256, $"G711A 最大误差 {maxError}，预期 ≤256");
@@ -58,18 +62,20 @@ public class AudioCodecTests
         // 编码 PCM → G711U
         var g711u = codec.FromPcm(pcm, null!);
         Assert.NotNull(g711u);
-        Assert.Equal(samples, g711u.Length);
+        Assert.Equal(samples, g711u.Total);
 
         // 解码 G711U → PCM
-        var pcm2 = codec.ToPcm(g711u, null!);
+        var pcm2 = codec.ToPcm(g711u.GetSpan(), null!);
         Assert.NotNull(pcm2);
-        Assert.Equal(samples * 2, pcm2.Length);
+        Assert.Equal(samples * 2, pcm2.Total);
 
         // 验证失真
+        var pcmBytes = new Byte[pcm2.Total];
+        for (var i = 0; i < pcmBytes.Length; i++) pcmBytes[i] = pcm2[i];
         var maxError = 0;
         for (var i = 0; i < samples * 2; i++)
         {
-            var err = Math.Abs(pcm[i] - pcm2[i]);
+            var err = Math.Abs(pcm[i] - pcmBytes[i]);
             if (err > maxError) maxError = err;
         }
         Assert.True(maxError <= 256, $"G711U 最大误差 {maxError}，预期 ≤256");
@@ -97,10 +103,10 @@ public class AudioCodecTests
 
         // 解码 ADPCM → PCM（新的 AdpcmState 实例，重置预测值）
         state = new AdpcmState();
-        var pcm2 = codec.ToPcm(adpcm, state);
+        var pcm2 = codec.ToPcm(adpcm.GetSpan(), state);
         Assert.NotNull(pcm2);
         // ADPCM 解码输出可能因块对齐有少量偏差，验证在合理范围内
-        Assert.True(Math.Abs(pcm2.Length - samples * 2) <= 32, $"ADPCM 输出长度 {pcm2.Length} 与输入 {samples * 2} 偏差过大");
+        Assert.True(Math.Abs(pcm2.Total - samples * 2) <= 32, $"ADPCM 输出长度 {pcm2.Total} 与输入 {samples * 2} 偏差过大");
 
         // ADPCM 是有损压缩，只验证长度正确，不验证精确误差
     }
@@ -117,13 +123,17 @@ public class AudioCodecTests
         var combined = hisiHeader.Concat(data).ToArray();
 
         // 去除海思头
-        var trimmed = factory.TrimHI(combined, out var trim);
+        var trimmed = factory.TrimHI(new ArrayPacket(combined), out var trim);
         Assert.True(trim);
-        Assert.Equal(data, trimmed.ToArray());
+        var trimmedBytes = new Byte[trimmed.Total];
+        for (var i = 0; i < trimmedBytes.Length; i++) trimmedBytes[i] = trimmed[i];
+        Assert.Equal(data, trimmedBytes);
 
         // 无海思头时 Trim 应返回原数据
-        var trimmed2 = factory.TrimHI(data, out var trim2);
+        var trimmed2 = factory.TrimHI(new ArrayPacket(data), out var trim2);
         Assert.False(trim2);
-        Assert.Equal(data, trimmed2.ToArray());
+        var trimmed2Bytes = new Byte[trimmed2.Total];
+        for (var i = 0; i < trimmed2Bytes.Length; i++) trimmed2Bytes[i] = trimmed2[i];
+        Assert.Equal(data, trimmed2Bytes);
     }
 }

@@ -1,4 +1,5 @@
-using NewLife.JT1078.Audio;
+using NewLife.Audio;
+using NewLife.Audio.AAC;
 using NewLife.JT1078.Models;
 using NewLife.JT1078.Protocols;
 using NewLife.Log;
@@ -27,28 +28,25 @@ public class AacHandler : IMsgHandler
         using var span = DefaultTracer.Instance?.NewSpan("AacHandler.Encode", msg);
 
         var buf = msg.Payload;
-        Byte[] data = null;
-        if (buf != null)
-        {
-            data = new Byte[buf.Total];
-            for (var i = 0; i < data.Length; i++) data[i] = buf[i];
-        }
-        if (data == null || data.Length == 0) return 0;
+        if (buf == null || buf.Total == 0) return 0;
 
         // 解码为 PCM
-        var pcm = Hub.AudioCodec.ToPcm(msg.Type, data);
-        if (pcm == null || pcm.Length == 0) return 0;
+        var pcm = Hub.AudioCodec.ToPcm((NewLife.Audio.AVTypes)msg.Type, buf);
+        if (pcm == null || pcm.Total == 0) return 0;
 
         _faacEncoder ??= new FaacEncoder(8000, 1, 16, true);
+
+        var pcmBytes = new Byte[pcm.Total];
+        for (var i = 0; i < pcmBytes.Length; i++) pcmBytes[i] = pcm[i];
 
         // 逐帧编码 AAC
         var step = _faacEncoder.FrameSize;
         var offset = 0;
-        while (offset < pcm.Length)
+        while (offset < pcmBytes.Length)
         {
-            var len = Math.Min(step, pcm.Length - offset);
+            var len = Math.Min(step, pcmBytes.Length - offset);
             var input = new Byte[len];
-            Buffer.BlockCopy(pcm, offset, input, 0, len);
+            Buffer.BlockCopy(pcmBytes, offset, input, 0, len);
 
             var output = new Byte[_faacEncoder.MaxOutput];
             var encoded = _faacEncoder.Encode(input, output);

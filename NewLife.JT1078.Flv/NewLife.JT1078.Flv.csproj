@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net6.0;net8.0</TargetFrameworks>
     <RootNamespace>NewLife.JT1078.Flv</RootNamespace>
     <AssemblyTitle>JT1078 FLV封装</AssemblyTitle>
     <Description>将JT1078 RTP音视频流实时转为FLV格式，支持HTTP-FLV直播</Description>
@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
+    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>

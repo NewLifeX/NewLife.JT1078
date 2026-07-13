@@ -50,6 +50,7 @@
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
     <ProjectReference Include="..\NewLife.JT1078.Flv\NewLife.JT1078.Flv.csproj" />
     <ProjectReference Include="..\NewLife.JT1078.FMp4\NewLife.JT1078.FMp4.csproj" />
+    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>

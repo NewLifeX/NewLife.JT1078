@@ -1,3 +1,4 @@
+using NewLife.Audio;
 using NewLife.JT1078.Models;
 using NewLife.JT1078.Protocols;
 using NewLife.Log;
@@ -24,21 +25,18 @@ public class PcmHandler : IMsgHandler
         using var span = DefaultTracer.Instance?.NewSpan("PcmHandler.Encode", msg);
 
         var buf = msg.Payload;
-        Byte[] data = null;
-        if (buf != null)
-        {
-            data = new Byte[buf.Total];
-            for (var i = 0; i < data.Length; i++) data[i] = buf[i];
-        }
-        if (data == null || data.Length == 0) return 0;
+        if (buf == null || buf.Total == 0) return 0;
 
         // 解码为 PCM
-        var pcm = Hub.AudioCodec.ToPcm(msg.Type, data);
-        if (pcm == null || pcm.Length == 0) return 0;
+        var pcm = Hub.AudioCodec.ToPcm((NewLife.Audio.AVTypes)msg.Type, buf);
+        if (pcm == null || pcm.Total == 0) return 0;
+
+        var pcmBytes = new Byte[pcm.Total];
+        for (var i = 0; i < pcmBytes.Length; i++) pcmBytes[i] = pcm[i];
 
         foreach (var session in users)
         {
-            await session.WriteAsync(pcm).ConfigureAwait(false);
+            await session.WriteAsync(pcmBytes).ConfigureAwait(false);
             session.LastActive = DateTime.Now;
         }
 

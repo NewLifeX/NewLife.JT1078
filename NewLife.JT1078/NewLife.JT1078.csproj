@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461;net45</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <RootNamespace>NewLife.JT1078</RootNamespace>
     <AssemblyTitle>JT1078核心协议</AssemblyTitle>
     <Description>JT/T 1078 视频通讯协议核心实现，包括RTP报文解析、音视频编解码、H.264解析</Description>
@@ -45,6 +45,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
     <PackageReference Include="NewLife.Core" Version="11.17.2026.701" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>

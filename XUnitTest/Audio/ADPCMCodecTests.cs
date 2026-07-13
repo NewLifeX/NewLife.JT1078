@@ -1,4 +1,5 @@
-using NewLife.JT1078.Audio;
+using NewLife.Audio.Codecs;
+using NewLife.Data;
 using Xunit;
 
 namespace XUnitTest.Audio;
@@ -62,13 +63,15 @@ public class ADPCMCodecTests
             var frame = new Byte[len * 2];
             Buffer.BlockCopy(pcm, offset * 2, frame, 0, len * 2);
             var encoded = codec.FromPcm(frame, state);
-            allAdpcm.AddRange(encoded);
+            var encodedBytes = new Byte[encoded.Total];
+            for (var j = 0; j < encodedBytes.Length; j++) encodedBytes[j] = encoded[j];
+            allAdpcm.AddRange(encodedBytes);
         }
 
         // 连续解码
         state = new AdpcmState();
         var decoded = codec.ToPcm(allAdpcm.ToArray(), state);
         Assert.NotNull(decoded);
-        Assert.True(decoded.Length > 0);
+        Assert.True(decoded.Total > 0);
     }
 }

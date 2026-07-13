@@ -1,4 +1,4 @@
-using NewLife.JT1078.Audio;
+using NewLife.Audio;
 using NewLife.JT1078.Protocols;
 
 namespace NewLife.JT1078.Protocols;
