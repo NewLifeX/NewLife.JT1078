@@ -1,6 +1,7 @@
-﻿using NewLife.JT1078.FMp4.Enums;
-using NewLife.JT1078.FMp4.MessagePack;
-using NewLife.JT1078.FMp4.Samples;
+using NewLife.Video.Containers.IsoBmff;
+using NewLife.Video.Containers.IsoBmff.Enums;
+using NewLife.Video.Containers.IsoBmff.MessagePack;
+using NewLife.Video.Containers.IsoBmff.Samples;
 using NewLife.JT1078.H264;
 using NewLife.JT1078.Protocols;
 
@@ -15,14 +16,14 @@ namespace NewLife.JT1078.FMp4
     public class FMp4Encoder
     {
         private readonly Dictionary<String, TrackInfo> TrackInfos;
-        private const UInt32 TfhdFlags = FMp4Constants.TFHD_FLAG_DEFAULT_BASE_IS_MOOF |
-                               FMp4Constants.TFHD_FLAG_DEFAULT_SIZE |
-                               FMp4Constants.TFHD_FLAG_SAMPLE_DESCRIPTION_INDEX |
-                               FMp4Constants.TFHD_FLAG_DEFAULT_DURATION |
-                               FMp4Constants.TFHD_FLAG_DEFAULT_FLAGS;
-        private const UInt32 TrunFlags = FMp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT |
-                               FMp4Constants.TRUN_FLAG_SAMPLE_SIZE_PRESENT |
-                               FMp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT;
+        private const UInt32 TfhdFlags = Fmp4Constants.TFHD_FLAG_DEFAULT_BASE_IS_MOOF |
+                               Fmp4Constants.TFHD_FLAG_DEFAULT_SIZE |
+                               Fmp4Constants.TFHD_FLAG_SAMPLE_DESCRIPTION_INDEX |
+                               Fmp4Constants.TFHD_FLAG_DEFAULT_DURATION |
+                               Fmp4Constants.TFHD_FLAG_DEFAULT_FLAGS;
+        private const UInt32 TrunFlags = Fmp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT |
+                               Fmp4Constants.TRUN_FLAG_SAMPLE_SIZE_PRESENT |
+                               Fmp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT;
         private const UInt32 SampleDescriptionIndex = 1;
         private const UInt32 DefaultSampleDuration = 40;
         private const UInt32 VideoTrackID = 1;
@@ -36,8 +37,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         internal Byte[] FtypBox()
         {
-            var buffer = FMp4ArrayPool.Rent(1024);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(1024);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 //ftyp
@@ -60,7 +61,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 
@@ -68,8 +69,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         internal Byte[] MoovBox(in H264NALU sps, in H264NALU pps)
         {
-            var buffer = FMp4ArrayPool.Rent(sps.RawData.Length + pps.RawData.Length + 1024);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(sps.RawData.Length + pps.RawData.Length + 1024);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 var h264GolombReader = new ExpGolombReader(sps.RawData);
@@ -172,7 +173,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 
@@ -180,8 +181,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         internal Byte[] StypBox()
         {
-            var buffer = FMp4ArrayPool.Rent(1024);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(1024);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 var stypTypeBox = new SegmentTypeBox
@@ -201,7 +202,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 
@@ -215,8 +216,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         internal Byte[] OtherVideoBox(in List<JTMessage> nalus)
         {
-            var buffer = FMp4ArrayPool.Rent(nalus.Sum(s => s.Payload.Total) + 4096);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(nalus.Sum(s => s.Payload.Total) + 4096);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 var truns = new List<TrackRunBox.TrackRunInfo>();
@@ -282,7 +283,7 @@ namespace NewLife.JT1078.FMp4
                             TrackID = VideoTrackID,
                             SampleDescriptionIndex = SampleDescriptionIndex,
                             DefaultSampleSize = truns[0].SampleSize,
-                            DefaultSampleFlags = FMp4Constants.TFHD_FLAG_VIDEO_TPYE
+                            DefaultSampleFlags = Fmp4Constants.TFHD_FLAG_VIDEO_TPYE
                         },
                         TrackFragmentBaseMediaDecodeTimeBox = new TrackFragmentBaseMediaDecodeTimeBox
                         {
@@ -295,7 +296,7 @@ namespace NewLife.JT1078.FMp4
                 // trun
                 movieFragmentBox.TrackFragmentBox.TrackRunBox = new TrackRunBox(1, flags: TrunFlags)
                 {
-                    FirstSampleFlags = FMp4Constants.TREX_FLAG_SAMPLE_DEPENDS_ON_I_PICTURE,
+                    FirstSampleFlags = Fmp4Constants.TREX_FLAG_SAMPLE_DEPENDS_ON_I_PICTURE,
                     TrackRunInfos = truns
                 };
                 movieFragmentBox.ToBuffer(ref writer);
@@ -326,7 +327,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 
@@ -338,8 +339,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         public Byte[] FirstVideoBox(in AVFrame avframe)
         {
-            var buffer = FMp4ArrayPool.Rent(CacheSize);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(CacheSize);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 //ftyp
@@ -459,7 +460,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 
@@ -472,8 +473,8 @@ namespace NewLife.JT1078.FMp4
         /// <returns></returns>
         public Byte[] OtherVideoBox(in List<H264NALU> nalus, in String key, in Boolean keyframe)
         {
-            var buffer = FMp4ArrayPool.Rent(CacheSize);
-            var writer = new FMp4MessagePackWriter(buffer);
+            var buffer = Fmp4ArrayPool.Rent(CacheSize);
+            var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
                 //styp
@@ -547,7 +548,7 @@ namespace NewLife.JT1078.FMp4
                             SampleDescriptionIndex = SampleDescriptionIndex,
                             DefaultSampleSize = sampleSize,
                             DefaultSampleDuration = DefaultSampleDuration,
-                            DefaultSampleFlags = FMp4Constants.TFHD_FLAG_VIDEO_TPYE
+                            DefaultSampleFlags = Fmp4Constants.TFHD_FLAG_VIDEO_TPYE
                         },
                         TrackFragmentBaseMediaDecodeTimeBox = new TrackFragmentBaseMediaDecodeTimeBox
                         {
@@ -563,14 +564,14 @@ namespace NewLife.JT1078.FMp4
                 if (keyframe)
                 {
                     movieFragmentBox.TrackFragmentBox.TrackRunBox = new TrackRunBox(1, flags:
-                                                            FMp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT |
-                                                            FMp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT);
+                                                            Fmp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT |
+                                                            Fmp4Constants.TRUN_FLAG_FIRST_SAMPLE_FLAGS_PRESENT);
                 }
                 else
                 {
-                    movieFragmentBox.TrackFragmentBox.TrackRunBox = new TrackRunBox(1, FMp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT);
+                    movieFragmentBox.TrackFragmentBox.TrackRunBox = new TrackRunBox(1, Fmp4Constants.TRUN_FLAG_DATA_OFFSET_PRESENT);
                 }
-                movieFragmentBox.TrackFragmentBox.TrackRunBox.FirstSampleFlags = FMp4Constants.TREX_FLAG_SAMPLE_DEPENDS_ON_I_PICTURE;
+                movieFragmentBox.TrackFragmentBox.TrackRunBox.FirstSampleFlags = Fmp4Constants.TREX_FLAG_SAMPLE_DEPENDS_ON_I_PICTURE;
                 movieFragmentBox.TrackFragmentBox.TrackRunBox.TrackRunInfos = truns;
                 movieFragmentBox.ToBuffer(ref writer);
                 //mdat
@@ -585,7 +586,7 @@ namespace NewLife.JT1078.FMp4
             }
             finally
             {
-                FMp4ArrayPool.Return(buffer);
+                Fmp4ArrayPool.Return(buffer);
             }
         }
 

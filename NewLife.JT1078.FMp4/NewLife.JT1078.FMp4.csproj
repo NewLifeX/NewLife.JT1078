@@ -48,6 +48,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
+    <ProjectReference Include="C:\X\NewLife.Video\NewLife.Video\NewLife.Video.csproj" />
+    <ProjectReference Include="C:\X\NewLife.Audio\NewLife.Audio\NewLife.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>
