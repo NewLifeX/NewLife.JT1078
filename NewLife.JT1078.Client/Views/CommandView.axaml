@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             x:Class="NewLife.JT1078.Client.Views.CommandView"
+             x:DataType="vm:CommandViewModel">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" ColumnDefinitions="*,*">
+
+        <!-- 设备列表 -->
+        <Border Grid.Column="0" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,5,5">
+            <StackPanel Spacing="8">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock FontWeight="Bold" FontSize="14">设备列表</TextBlock>
+                    <Button Content="🔄 刷新" Command="{Binding RefreshDevicesCommand}" />
+                    <ProgressBar IsVisible="{Binding IsLoadingDevices}" IsIndeterminate="True" Width="100" Height="16" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Devices}" Height="200">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding DeviceKey, StringFormat='{}设备: {0}'}" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Remote, StringFormat='{}地址: {0}'}" />
+                                <TextBlock Text="{Binding Type, StringFormat='{}类型: {0}'}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <!-- 命令构建器 -->
+        <Border Grid.Column="1" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="5,0,0,5">
+            <StackPanel Spacing="8">
+                <TextBlock FontWeight="Bold" FontSize="14">命令构建器</TextBlock>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Label VerticalContentAlignment="Center">SIM:</Label>
+                    <TextBox Text="{Binding Sim}" Width="120" />
+                    <Label VerticalContentAlignment="Center">通道:</Label>
+                    <TextBox Text="{Binding Channel}" Width="60" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Label VerticalContentAlignment="Center">AVType:</Label>
+                    <ComboBox ItemsSource="{Binding AVTypes}" SelectedIndex="{Binding SelectedAvType}" Width="100" />
+                    <Label VerticalContentAlignment="Center">DataType:</Label>
+                    <ComboBox SelectedIndex="{Binding SelectedDataType}" Width="120">
+                        <ComboBoxItem>VideoIFrame</ComboBoxItem>
+                        <ComboBoxItem>VideoPFrame</ComboBoxItem>
+                        <ComboBoxItem>AudioFrame</ComboBoxItem>
+                        <ComboBoxItem>Transparent</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Label VerticalContentAlignment="Center">数据(Hex):</Label>
+                    <TextBox Text="{Binding HexData}" Width="300" Watermark="十六进制数据，如 01A2B3" />
+                </StackPanel>
+                <Button Content="📤 发送命令" Command="{Binding SendCommandCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <!-- 结果 -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="#1a1a2e" Padding="10" Margin="0,0,0,5">
+            <TextBlock Text="{Binding Result}" Foreground="#eee" />
+        </Border>
+
+        <!-- 下方日志 -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="10">
+            <TextBlock Text="命令日志将显示在这里" Foreground="#666" />
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             x:Class="NewLife.JT1078.Client.Views.RecordView"
+             x:DataType="vm:RecordViewModel">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <!-- 参数配置 -->
+        <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Label VerticalContentAlignment="Center">SIM:</Label>
+                <TextBox Text="{Binding Sim}" Width="140" />
+                <Label VerticalContentAlignment="Center">通道:</Label>
+                <TextBox Text="{Binding Channel}" Width="60" />
+                <Label VerticalContentAlignment="Center">格式:</Label>
+                <ComboBox ItemsSource="{Binding Formats}" SelectedIndex="{Binding SelectedFormat}" Width="80" />
+            </StackPanel>
+        </Border>
+
+        <!-- 时间范围 -->
+        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Label VerticalContentAlignment="Center">开始:</Label>
+                <TextBox Text="{Binding StartTime}" Width="180" />
+                <Label VerticalContentAlignment="Center">结束:</Label>
+                <TextBox Text="{Binding EndTime}" Width="180" />
+            </StackPanel>
+        </Border>
+
+        <!-- 操作按钮 -->
+        <Border Grid.Row="2" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="▶ 播放" Command="{Binding PlayCommand}" />
+                <Button Content="⏹ 停止" Command="{Binding StopCommand}" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource SystemAccentColor}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 播放区域 -->
+        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <Border Background="#0a0a1e">
+                    <TextBlock Text="录像回放播放区域 (LibVLC)" Foreground="#666"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontSize="16" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

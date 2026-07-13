@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+        xmlns:views="using:NewLife.JT1078.Client.Views"
+        x:Class="NewLife.JT1078.Client.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="JT1078 测试客户端"
+        Width="1200"
+        Height="800"
+        MinWidth="900"
+        MinHeight="600">
+    <Grid RowDefinitions="Auto,*">
+        <!-- 顶部连接配置栏 -->
+        <Border Background="{DynamicResource SystemAccentColor}" Padding="10">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Label Foreground="White" VerticalContentAlignment="Center" FontWeight="Bold">JT1078 测试客户端</Label>
+                <Separator Width="1" Height="20" Margin="5,0" />
+                <Label Foreground="White" VerticalContentAlignment="Center">服务器:</Label>
+                <TextBox Text="{Binding Config.Host}" Width="120" Foreground="White" />
+                <Label Foreground="White" VerticalContentAlignment="Center">HTTP:</Label>
+                <TextBox Text="{Binding Config.HttpPort}" Width="60" Foreground="White" />
+                <Label Foreground="White" VerticalContentAlignment="Center">TCP:</Label>
+                <TextBox Text="{Binding Config.TcpPort}" Width="60" Foreground="White" />
+                <Label Foreground="White" VerticalContentAlignment="Center">UDP:</Label>
+                <TextBox Text="{Binding Config.UdpPort}" Width="60" Foreground="White" />
+                <Label Foreground="White" VerticalContentAlignment="Center">Token:</Label>
+                <TextBox Text="{Binding Config.Token}" Width="100" Foreground="White" />
+            </StackPanel>
+        </Border>
+
+        <!-- 主内容区 -->
+        <Grid ColumnDefinitions="160,*" RowDefinitions="*" Grid.Row="1">
+            <!-- 左侧 Tab 导航 -->
+            <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="0,0,1,0" Padding="5">
+                <ItemsControl ItemsSource="{Binding Tabs}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding}"
+                                    Margin="2"
+                                    Padding="10,8"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding $parent[Window].DataContext.SelectTabCommand}"
+                                    CommandParameter="{Binding $parent[ItemsControl].ItemIndex, RelativeSource={RelativeSource Self}}">
+                                <Button.Styles>
+                                    <Style Selector="Button">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+                                    </Style>
+                                </Button.Styles>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+
+            <!-- 右侧内容区 -->
+            <ScrollViewer Grid.Column="1" Padding="10">
+                <Carousel SelectedIndex="{Binding SelectedTab}" Transition="None">
+                    <!-- Tab 0: 直播拉流 -->
+                    <views:LiveStreamView DataContext="{Binding LiveStreamVM}" />
+
+                    <!-- Tab 1: 录像回放 -->
+                    <views:RecordView DataContext="{Binding RecordVM}" />
+
+                    <!-- Tab 2: 设备命令 -->
+                    <views:CommandView DataContext="{Binding CommandVM}" />
+
+                    <!-- Tab 3: TCP 直连 -->
+                    <views:TcpTestView DataContext="{Binding TcpTestVM}" />
+
+                    <!-- Tab 4: UDP 直连 -->
+                    <views:UdpTestView DataContext="{Binding UdpTestVM}" />
+
+                    <!-- Tab 5: 状态监控 -->
+                    <views:StatusView DataContext="{Binding StatusVM}" />
+                </Carousel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

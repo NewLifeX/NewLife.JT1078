@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             x:Class="NewLife.JT1078.Client.Views.LiveStreamView"
+             x:DataType="vm:LiveStreamViewModel">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <!-- 参数配置 -->
+        <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Label VerticalContentAlignment="Center">SIM:</Label>
+                <TextBox Text="{Binding Sim}" Width="140" />
+                <Label VerticalContentAlignment="Center">通道:</Label>
+                <TextBox Text="{Binding Channel}" Width="60" />
+                <Label VerticalContentAlignment="Center">格式:</Label>
+                <ComboBox ItemsSource="{Binding Formats}" SelectedIndex="{Binding SelectedFormat}" Width="80" />
+                <Label VerticalContentAlignment="Center">模式:</Label>
+                <ComboBox ItemsSource="{Binding Modes}" SelectedIndex="{Binding SelectedMode}" Width="100" />
+                <Button Content="▶ 播放" Command="{Binding PlayCommand}" Margin="10,0,0,0" />
+                <Button Content="⏹ 停止" Command="{Binding StopCommand}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 状态信息 -->
+        <Border Grid.Row="1" Background="#1a1a2e" Padding="8" Margin="0,0,0,5">
+            <TextBlock Text="{Binding Status}" Foreground="#eee" />
+        </Border>
+
+        <!-- 统计面板 -->
+        <Border Grid.Row="2" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontWeight="Bold">已接收:</TextBlock>
+                    <TextBlock Text="{Binding ReceivedBytes, StringFormat='{}{0:N0} 字节'}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontWeight="Bold">包数:</TextBlock>
+                    <TextBlock Text="{Binding ReceivedPackets, StringFormat='{}{0:N0}'}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontWeight="Bold">码率:</TextBlock>
+                    <TextBlock Text="{Binding Bitrate, StringFormat='{}{0:N0} bps'}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontWeight="Bold">时长:</TextBlock>
+                    <TextBlock Text="{Binding Duration, StringFormat='{}{0} 秒'}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 视频播放区域（占位） -->
+        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <!-- LibVLC 视频播放器将在后面集成 -->
+                <Border Background="#0a0a1e">
+                    <TextBlock Text="视频播放区域 (LibVLC)" Foreground="#666"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               FontSize="16" />
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

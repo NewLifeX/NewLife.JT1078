@@ -1,0 +1,77 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             xmlns:converters="using:NewLife.JT1078.Client.Converters"
+             x:Class="NewLife.JT1078.Client.Views.UdpTestView"
+             x:DataType="vm:UdpTestViewModel">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,*">
+
+        <!-- 连接区域 -->
+        <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5" Grid.ColumnSpan="2">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center">UDP 直连测试</TextBlock>
+                <Separator Width="1" Height="20" Margin="5,0" />
+                <Button Content="🔗 连接" Command="{Binding ConnectCommand}" IsEnabled="{Binding IsConnected, Converter={x:Static converters:BoolConverters.Not}}" />
+                <Button Content="🔌 断开" Command="{Binding DisconnectCommand}" IsEnabled="{Binding IsConnected}" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource SystemAccentColor}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 报文构建区 -->
+        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,5,5">
+            <StackPanel Spacing="8">
+                <TextBlock FontWeight="Bold" FontSize="14">报文构建器</TextBlock>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Label VerticalContentAlignment="Center">SIM:</Label>
+                    <TextBox Text="{Binding Sim}" Width="120" />
+                    <Label VerticalContentAlignment="Center">通道:</Label>
+                    <TextBox Text="{Binding Channel}" Width="60" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Label VerticalContentAlignment="Center">AVType:</Label>
+                    <ComboBox ItemsSource="{Binding AVTypes}" SelectedIndex="{Binding SelectedAvType}" Width="100" />
+                    <Label VerticalContentAlignment="Center">DataType:</Label>
+                    <ComboBox ItemsSource="{Binding DataTypes}" SelectedIndex="{Binding SelectedDataType}" Width="120" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                    <Label>Payload (Hex):</Label>
+                    <TextBox Text="{Binding HexPayload}" Height="60" Watermark="十六进制数据，留空自动生成" AcceptsReturn="True" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="📤 发送 JTMessage" Command="{Binding SendMessageCommand}" IsEnabled="{Binding IsConnected}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 接收消息列表 -->
+        <Border Grid.Row="1" Grid.Column="1" BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="5,0,0,5">
+            <StackPanel Spacing="8">
+                <TextBlock FontWeight="Bold" FontSize="14">消息记录</TextBlock>
+                <ListBox ItemsSource="{Binding Messages}" Height="250">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="4" Margin="0,1">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding Direction}" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding Summary}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
+
+        <!-- 解析详情 -->
+        <Border Grid.Row="2" Grid.ColumnSpan="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <TextBlock Text="选中消息后此处显示解析详情" Foreground="#666" />
+        </Border>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="3" Grid.ColumnSpan="2" Background="#1a1a2e" Padding="8">
+            <TextBlock Text="{Binding Status}" Foreground="#eee" />
+        </Border>
+    </Grid>
+</UserControl>

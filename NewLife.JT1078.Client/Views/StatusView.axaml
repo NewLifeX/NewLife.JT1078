@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             x:Class="NewLife.JT1078.Client.Views.StatusView"
+             x:DataType="vm:StatusViewModel">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!-- 工具栏 -->
+        <Border BorderBrush="{DynamicResource SystemAccentColor}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center">设备状态监控</TextBlock>
+                <Separator Width="1" Height="20" Margin="5,0" />
+                <Button Content="🔄 刷新" Command="{Binding RefreshCommand}" />
+                <ToggleButton Content="自动刷新" IsChecked="{Binding IsAutoRefresh}" Command="{Binding ToggleAutoRefreshCommand}" />
+                <TextBlock Text="{Binding Status}" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="{DynamicResource SystemAccentColor}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 统计信息 -->
+        <Border Grid.Row="1" Background="#1a1a2e" Padding="10" Margin="0,0,0,5">
+            <StackPanel Orientation="Horizontal" Spacing="20">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock FontWeight="Bold" Foreground="#eee">在线设备:</TextBlock>
+                    <TextBlock Text="{Binding DeviceCount}" Foreground="#eee" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- 设备列表表格 -->
+        <Border Grid.Row="2" BorderBrush="#333" BorderThickness="1" CornerRadius="4" Padding="0">
+            <DataGrid ItemsSource="{Binding Devices}" AutoGenerateColumns="True"
+                      IsReadOnly="True" Margin="5" />
+        </Border>
+    </Grid>
+</UserControl>

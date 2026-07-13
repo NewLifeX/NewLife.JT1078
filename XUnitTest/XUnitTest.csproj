@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
     <ProjectReference Include="..\NewLife.JT1078.Server\NewLife.JT1078.Server.csproj" />
+    <ProjectReference Include="..\NewLife.JT1078.Client\NewLife.JT1078.Client.csproj" />
   </ItemGroup>
 
 </Project>
