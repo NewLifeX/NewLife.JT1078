@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using NewLife.JT1078.Models;
 using NewLife.JT1078.Server;
+using NewLife.JT1078.Server.Hls;
 using Microsoft.AspNetCore.Mvc;
 
 namespace NewLife.JT1078.Web;
@@ -11,12 +12,14 @@ public class LiveController : ControllerBase
 {
     private readonly SessionManager _sessionManager;
     private readonly IJT1078Authorization _authorization;
+    private readonly HlsSegmentCache _hlsCache;
 
     /// <summary>实例化直播控制器</summary>
-    public LiveController(SessionManager sessionManager, IJT1078Authorization authorization)
+    public LiveController(SessionManager sessionManager, IJT1078Authorization authorization, HlsSegmentCache hlsCache)
     {
         _sessionManager = sessionManager;
         _authorization = authorization;
+        _hlsCache = hlsCache;
     }
 
     private Boolean Authorize(LiveModel model)
@@ -115,25 +118,74 @@ public class LiveController : ControllerBase
     }
 
     /// <summary>MP3 音频直播</summary>
-    /// <remarks>需要外部 MP3 编码器库支持，当前返回 501 Not Implemented</remarks>
+    /// <remarks>使用纯 C# 简易 MP3 编码器编码音频流</remarks>
     [Route("live.mp3")]
     public async Task OnMp3([FromQuery] LiveModel model)
     {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
         var context = HttpContext;
-        context.Response.StatusCode = 501;
-        context.Response.ContentType = "text/plain";
-        await context.Response.WriteAsync("MP3 encoder not implemented. Need external MP3 codec library (e.g., LAME).");
+        if (context.WebSockets.IsWebSocketRequest)
+            await ProcessWebSocket(context, model, RTPType.Mp3);
+        else
+            await ProcessHttp(context, model, RTPType.Mp3);
     }
 
-    /// <summary>HLS 直播</summary>
-    /// <remarks>需要 HLS 封装库支持，当前返回 501 Not Implemented</remarks>
-    [Route("live.m3u8")]
+    /// <summary>HLS 直播播放列表</summary>
+    /// <remarks>返回 M3U8 播放列表，包含 TS 段 URL</remarks>
+    [Route("hls.m3u8")]
     public async Task OnHls([FromQuery] LiveModel model)
     {
-        var context = HttpContext;
-        context.Response.StatusCode = 501;
-        context.Response.ContentType = "text/plain";
-        await context.Response.WriteAsync("HLS packager not implemented. Need HLS library (m3u8 + TS segmenter).");
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
+        var cache = _hlsCache;
+        var key = HlsSegmentCache.GetKey(model.SIM, model.Channel);
+        var playlist = cache.GetPlaylist(key);
+
+        if (playlist == null)
+        {
+            HttpContext.Response.StatusCode = 404;
+            await HttpContext.Response.WriteAsync("No HLS data available for this device channel.");
+            return;
+        }
+
+        HttpContext.Response.ContentType = "application/vnd.apple.mpegurl";
+        HttpContext.Response.Headers["Cache-Control"] = "no-cache";
+        await HttpContext.Response.WriteAsync(playlist);
+    }
+
+    /// <summary>HLS TS 段</summary>
+    /// <remarks>返回指定序号的 TS 段数据</remarks>
+    [Route("hls.ts")]
+    public async Task OnHlsSegment([FromQuery] LiveModel model, [FromQuery] Int32 seq)
+    {
+        if (!Authorize(model))
+        {
+            HttpContext.Response.StatusCode = 401;
+            return;
+        }
+
+        var cache = _hlsCache;
+        var key = HlsSegmentCache.GetKey(model.SIM, model.Channel);
+        var segment = cache.GetSegment(key, seq);
+
+        if (segment == null || segment.Data == null)
+        {
+            HttpContext.Response.StatusCode = 404;
+            return;
+        }
+
+        HttpContext.Response.ContentType = "video/MP2T";
+        HttpContext.Response.Headers["Cache-Control"] = "no-cache";
+        await HttpContext.Response.Body.WriteAsync(segment.Data);
     }
 
     private async Task ProcessWebSocket(HttpContext context, LiveModel model, RTPType type)
@@ -180,6 +232,7 @@ public class LiveController : ControllerBase
         {
             RTPType.Flv => "video/x-flv",
             RTPType.Mp4 => "video/mp4",
+            RTPType.Mp3 => "audio/mpeg",
             _ => "application/octet-stream",
         };
         response.Headers["Cache-Control"] = "no-cache";

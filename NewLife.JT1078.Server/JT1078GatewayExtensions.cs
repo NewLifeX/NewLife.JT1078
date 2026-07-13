@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NewLife.JT1078.Server.Hls;
 
 namespace NewLife.JT1078.Server;
 
@@ -22,6 +23,7 @@ public static class JT1078GatewayExtensions
         // 注册核心服务
         services.TryAddSingleton<JT1078Server>();
         services.TryAddSingleton<SessionManager>();
+        services.TryAddSingleton<HlsSegmentCache>();
         services.TryAddSingleton<IJT1078Authorization, JT1078AuthorizationDefault>();
 
         // 注册设备命令总线
