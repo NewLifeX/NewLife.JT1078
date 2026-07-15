@@ -71,9 +71,7 @@ namespace NewLife.JT1078.Protocols
                 ss[CodecName] = pc = new PacketCodec
                 {
                     MaxCache = 1024,
-#pragma warning disable CS0618 // PacketCodec.GetLength 已弃用，但 GetLength2 签名未知
-                    GetLength = JTMessage.GetLength,
-#pragma warning restore CS0618
+                    GetLength2 = JTMessage.GetLength2,
                     Tracer = (context.Owner as ISocket)?.Tracer
                 };
 

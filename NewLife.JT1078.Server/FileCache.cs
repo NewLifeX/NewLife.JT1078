@@ -94,6 +94,38 @@ public class FileCache : DisposeBase
         return files;
     }
 
+    /// <summary>读取已录制的文件内容</summary>
+    /// <param name="sim">SIM 卡号</param>
+    /// <param name="channel">通道号</param>
+    /// <param name="type">数据类型（flv/mp4/pcm/aac/wav）</param>
+    /// <param name="date">日期，默认当天</param>
+    /// <returns>文件数据，未找到返回空数组</returns>
+    public Byte[] ReadFile(String sim, Int32 channel, String type, DateTime? date = null)
+    {
+        var files = GetFiles(sim, channel, date);
+        var match = files.FirstOrDefault(f => f.EndsWith($"_{type}") || f.Contains($"_{type}."));
+        if (match == null || !File.Exists(match)) return [];
+
+        XTrace.Log.Info("FileCache.Read {0}", match);
+        return File.ReadAllBytes(match);
+    }
+
+    /// <summary>获取录制文件流</summary>
+    /// <param name="sim">SIM 卡号</param>
+    /// <param name="channel">通道号</param>
+    /// <param name="type">数据类型</param>
+    /// <param name="date">日期</param>
+    /// <returns>文件流，未找到返回 null</returns>
+    public Stream? OpenRead(String sim, Int32 channel, String type, DateTime? date = null)
+    {
+        var files = GetFiles(sim, channel, date);
+        var match = files.FirstOrDefault(f => f.EndsWith($"_{type}") || f.Contains($"_{type}."));
+        if (match == null || !File.Exists(match)) return null;
+
+        XTrace.Log.Info("FileCache.OpenRead {0}", match);
+        return File.OpenRead(match);
+    }
+
     /// <summary>释放资源</summary>
     protected override void Dispose(Boolean disposing)
     {

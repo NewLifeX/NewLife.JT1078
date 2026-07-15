@@ -266,6 +266,29 @@ namespace NewLife.JT1078.Protocols
             return len;
         }
 
+        /// <summary>获取数据包长度（GetLength2 委托，使用 Span 提升性能）</summary>
+        /// <param name="span">数据片段</param>
+        /// <returns>完整消息长度，返回0表示数据不足</returns>
+        public static Int32 GetLength2(ReadOnlySpan<Byte> span)
+        {
+            if (span.Length < 16 + 2) return 0;
+
+            var dataType = (DataTypes)(span[15] >> 4);
+
+            // 头部长度
+            var len = 4 + 1 + 1 + 2 + 6 + 1 + 1;
+            if (dataType != DataTypes.Transparent) len += 8;
+            if (dataType <= DataTypes.VideoBFrame) len += 2 + 2;
+
+            if (span.Length < len + 2) return 0;
+
+            // 手动读取 2 字节大端长度
+            len += (span[len] << 8) | span[len + 1];
+            len += 2;
+
+            return len;
+        }
+
         public String GetKey() => $"{SIM}_{Channel}";
 
         /// <summary>释放资源</summary>
