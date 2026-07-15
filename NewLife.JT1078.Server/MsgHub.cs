@@ -32,6 +32,9 @@ public class MsgHub : DisposeBase, IMsgHub
     /// <summary>文件缓存流字典</summary>
     private readonly Dictionary<String, MemoryStream> _files = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>格式处理器缓存。按 RTPType 延迟创建</summary>
+    private readonly Dictionary<RTPType, IMsgHandler> _handlers = new();
+
     /// <summary>是否已启动</summary>
     private Boolean _started;
     #endregion
@@ -65,6 +68,12 @@ public class MsgHub : DisposeBase, IMsgHub
             file.TryDispose();
         }
         _files.Clear();
+
+        foreach (var handler in _handlers.Values)
+        {
+            (handler as IDisposable)?.Dispose();
+        }
+        _handlers.Clear();
     }
 
     /// <summary>生产消息，分发给匹配的订阅者</summary>
@@ -73,7 +82,40 @@ public class MsgHub : DisposeBase, IMsgHub
         var users = _users.ToArray();
         if (users.Length == 0) return 0;
 
-        return users.Length;
+        // 按 RTPType 分组，每组调用对应 handler
+        var groups = users.GroupBy(e => e.Type);
+        var total = 0;
+        foreach (var group in groups)
+        {
+            var handler = GetOrCreateHandler(group.Key);
+            if (handler != null)
+                total += await handler.EncodeAsync(msg, group.ToArray()).ConfigureAwait(false);
+        }
+
+        return total;
+    }
+
+    /// <summary>获取或创建格式处理器</summary>
+    private IMsgHandler? GetOrCreateHandler(RTPType type)
+    {
+        if (_handlers.TryGetValue(type, out var handler)) return handler;
+
+        handler = type switch
+        {
+            RTPType.Flv => new FlvHandler { Hub = this },
+            RTPType.Mp4 => new Mp4Handler { Hub = this },
+            RTPType.Aac => new AacHandler { Hub = this },
+            RTPType.Pcm => new PcmHandler { Hub = this },
+            RTPType.Wav => new WavHandler { Hub = this },
+            RTPType.Hls => new HlsHandler { Hub = this },
+            RTPType.Mp3 => new Mp3Handler { Hub = this },
+            _ => null,
+        };
+
+        if (handler != null)
+            _handlers[type] = handler;
+
+        return handler;
     }
 
     /// <summary>向所有订阅者写入数据</summary>

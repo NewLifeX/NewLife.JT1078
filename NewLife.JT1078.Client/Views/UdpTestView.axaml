@@ -35,7 +35,7 @@
                 </StackPanel>
                 <StackPanel Spacing="4">
                     <Label>Payload (Hex):</Label>
-                    <TextBox Text="{Binding HexPayload}" Height="60" Watermark="十六进制数据，留空自动生成" AcceptsReturn="True" />
+                    <TextBox Text="{Binding HexPayload}" Height="60" PlaceholderText="十六进制数据，留空自动生成" AcceptsReturn="True" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Content="📤 发送 JTMessage" Command="{Binding SendMessageCommand}" IsEnabled="{Binding IsConnected}" />

@@ -50,7 +50,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Label VerticalContentAlignment="Center">数据(Hex):</Label>
-                    <TextBox Text="{Binding HexData}" Width="300" Watermark="十六进制数据，如 01A2B3" />
+                    <TextBox Text="{Binding HexData}" Width="300" PlaceholderText="十六进制数据，如 01A2B3" />
                 </StackPanel>
                 <Button Content="📤 发送命令" Command="{Binding SendCommandCommand}" HorizontalAlignment="Left" />
             </StackPanel>

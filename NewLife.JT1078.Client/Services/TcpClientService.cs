@@ -39,7 +39,9 @@ public class TcpClientService : IDisposable
         _codec = new PacketCodec
         {
             MaxCache = 1024,
+#pragma warning disable CS0618 // PacketCodec.GetLength 已弃用，但 GetLength2 签名未知
             GetLength = JTMessage.GetLength,
+#pragma warning restore CS0618
         };
 
         OnConnectionChanged?.Invoke(true);

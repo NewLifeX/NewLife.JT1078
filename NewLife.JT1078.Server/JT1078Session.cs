@@ -80,6 +80,16 @@ public class JT1078Session : NetSession<JT1078Server>
     protected virtual void OnMessage(JTMessage msg)
     {
         OnReceiveMessage?.Invoke(this, msg);
+
+        // 分发到消息中枢，推送给拉流订阅者
+        if (!msg.SIM.IsNullOrEmpty())
+        {
+            var hub = MsgHubRegistry.GetOrAdd(msg.SIM, msg.Channel);
+            if (hub.Device == null) hub.Device = this;
+
+            // 异步分发，不阻塞接收线程
+            _ = hub.ProduceAsync(msg);
+        }
     }
 
     /// <summary>向终端发送下行信令</summary>

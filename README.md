@@ -95,10 +95,8 @@ builder.Services.AddJT1078Gateway()
 
 | 包名 | 说明 | NuGet |
 |------|------|-------|
-| NewLife.JT1078 | 核心 RTP 协议 + 音视频编解码 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
-| NewLife.JT1078.Flv | FLV 转封装 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Flv.svg)](https://www.nuget.org/packages/NewLife.JT1078.Flv) |
-| NewLife.JT1078.FMp4 | fMP4/CMAF 转封装 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.FMp4.svg)](https://www.nuget.org/packages/NewLife.JT1078.FMp4) |
-| NewLife.JT1078.Server | TCP/UDP 服务端 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
+| NewLife.JT1078 | 核心协议 + 编解码 + FLV/fMP4 转封装（Flv/FMp4 已合并入核心） | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | TCP/UDP 服务端 + DI 构建器 + HLS/MP3 编码 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## 架构
 
@@ -113,8 +111,10 @@ JTMessage (RTP 报文)
     ├──► H264Decoder (视频)
     ├──► AudioCodecFactory (音频)
     │
-    ├──► NewLife.JT1078.Flv ───► HTTP-FLV / WS-FLV 直播
-    ├──► NewLife.JT1078.FMp4 ──► fMP4 直播
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV 直播
+    ├──► FMp4Encoder ────────► fMP4 直播
+    ├──► HlsHandler / TSMuxer ──► HLS 直播 (/hls.m3u8)
+    ├──► Mp3Handler ─────────► MP3 音频直播
     ├──► 音频 Handler ────────► AAC / PCM / WAV 直播
     │
     ├──► DeviceSessionManager ──► 集群命令广播 (IEventBus)
@@ -136,8 +136,9 @@ services.AddJT1078Gateway().AddTcp().AddHttp();
 ```
 
 REST API：
-- `POST /Command/Send` — 向设备发送信令（自动路由到设备所在服务器）
-- `GET /Command/Devices` — 查询本地已连接的设备列表
+- `POST /Command/Send` — 向设备发送信令（同步，自动路由到设备所在服务器）
+- `POST /Command/SendAsync` — 向设备发送信令（异步，CancellationToken 支持）
+- `GET /Command/Devices` — 查询本地已连接的设备列表（含 TCP/UDP 类型）
 
 ## 直播端点
 
@@ -148,6 +149,8 @@ REST API：
 | `/live.aac` | AAC | HTTP | 原生音频 |
 | `/live.pcm` | PCM | HTTP | 原生音频 |
 | `/live.wav` | WAV | HTTP | 原生音频 |
+| `/live.mp3` | MP3 | HTTP | 原生音频 |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
 
 ## 协议参考
 

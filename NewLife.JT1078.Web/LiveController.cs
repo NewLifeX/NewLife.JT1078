@@ -208,6 +208,10 @@ public class LiveController : ControllerBase
 
         _sessionManager.Add(session);
 
+        // 注册到消息中枢，连接设备数据流
+        var hub = MsgHubRegistry.GetOrAdd(model.SIM, model.Channel);
+        hub.AddUser(session);
+
         try
         {
             var buffer = new Byte[1024];
@@ -220,6 +224,7 @@ public class LiveController : ControllerBase
         }
         finally
         {
+            hub.RemoveUser(session);
             _sessionManager.Remove(session);
             session.Dispose();
         }
@@ -253,6 +258,10 @@ public class LiveController : ControllerBase
 
         _sessionManager.Add(session);
 
+        // 注册到消息中枢，连接设备数据流
+        var hub = MsgHubRegistry.GetOrAdd(model.SIM, model.Channel);
+        hub.AddUser(session);
+
         try
         {
             await Task.Delay(Timeout.Infinite, context.RequestAborted);
@@ -260,6 +269,7 @@ public class LiveController : ControllerBase
         catch (OperationCanceledException) { }
         finally
         {
+            hub.RemoveUser(session);
             _sessionManager.Remove(session);
             session.Dispose();
         }
