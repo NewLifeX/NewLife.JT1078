@@ -44,3 +44,29 @@ NewLife.JT1078 首个正式版发布，覆盖 JT/T 1078 视频通讯协议全链
 ### ⚠️ 已知限制
 
 - AAC 编码依赖 libfaac.dll（需自行编译）
+
+## v1.0.2026.0715 - 2026-07-15
+
+### 🔧 审计修复
+
+#### P0 数据流修复
+
+- **M8 流媒体直播数据流连通**：MsgHub.ProduceAsync 按 RTPType 分组用户，延迟创建对应 Handler 并调用 EncodeAsync；新增 MsgHubRegistry 静态注册表；JT1078Session.OnMessage 分发到中枢；LiveController 注册 HttpSession 到中枢。直播管线从"端点可连接但无数据"变为完整运行
+- **M9 录像回放数据流修复**：FileCache 新增 ReadFile/OpenRead 方法；RecordController 全面重写，从 FileCache 读取录制文件并流式返回 HTTP 响应，新增 RecordModel（SIM/Channel/Date），移除长连接等待
+
+#### P1 废弃 API
+
+- **M7-5 废弃 API 迁移**：JTMessage 新增 GetLength2(ReadOnlySpan<Byte>) 方法，性能更优；JTCodec 和 TcpClientService 切换为 GetLength2 委托，消除 CS0618 警告
+
+#### P2 代码质量
+
+- **M14-8 废弃 API 修复**：3 个 AXAML 文件中 TextBox.Watermark 替换为 PlaceholderText
+- **M15-7 测试增强**：Session_SendJT 从 Assert.True(true) 改为方法签名验证
+
+### 🧪 测试
+
+| 指标 | 数值 |
+|------|------|
+| 测试总数 | **83 项**（+16 项自首版） |
+| 测试覆盖率 | M1~M17 全部覆盖 |
+| 审计项 | 22 项缺口已修复 20 项，2 项暂缓（外部依赖）
