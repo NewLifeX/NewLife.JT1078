@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <PublishAot>true</PublishAot>
+    <AssemblyTitle>JT1078 AOT 冒烟</AssemblyTitle>
+    <Description>NativeAOT 兼容性冒烟：协议编解码与运行时多语言</Description>
+    <!-- IL2104 来自上游 NewLife.Audio 的裁剪告警，不属于本项目代码路径；本工程只校验自身零告警 -->
+    <NoWarn>$(NoWarn);IL2104</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NewLife.JT1078\NewLife.JT1078.csproj" />
+    <ProjectReference Include="..\NewLife.JT1078.Server\NewLife.JT1078.Server.csproj" />
+  </ItemGroup>
+
+</Project>
