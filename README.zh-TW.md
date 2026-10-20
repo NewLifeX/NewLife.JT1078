@@ -103,3 +103,20 @@ dotnet test -c Release
 ## 授權
 
 [MIT](LICENSE) © 2022-2026 新生命開發團隊
+
+## 新生命開發團隊
+
+<img src="https://newlifex.com/logo.png" width="48" align="right" alt="NewLife" />
+
+新生命團隊成立於 2002 年，二十餘年專注 .NET 與物聯網技術生態，主導開源專案近百個（生態版圖收錄 34 個主幹專案），為電力、物流、醫療、工控、網際網路等行業提供軟硬體一體化解決方案；以「學無先後達者為師」為信條。
+
+開源元件在 NuGet 累計下載 <!--nuget-total:start-->6.48M<!--nuget-total:end--> 次（全生態口徑，截至 2026-10）。
+
+網站：https://newlifex.com · 開源組織：https://github.com/NewLifeX
+
+<details>
+<summary>微信公眾號：智能大石头（掃碼關注）</summary>
+
+![智能大石头](https://newlifex.com/stone.jpg)
+
+</details>

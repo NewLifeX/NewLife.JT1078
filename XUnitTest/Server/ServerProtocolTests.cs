@@ -92,6 +92,15 @@ public class ServerProtocolTests
         Assert.Same(msg, server.Merge(session, msg));
     }
 
+    [Fact(DisplayName = "分包合并：空消息安全返回")]
+    public void Merge_Null()
+    {
+        using var server = new JT1078Server { Cache = new MemoryCache() };
+        var session = new JT1078Session();
+
+        Assert.Null(server.Merge(session, null!));
+    }
+
     [Fact(DisplayName = "分包合并：首包+中间包+末包")]
     public void Merge_Fragments()
     {

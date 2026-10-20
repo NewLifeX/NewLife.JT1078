@@ -88,7 +88,7 @@ public class JT1078Session : NetSession<JT1078Server>
             }
         }
 
-        var msg = Host?.Merge(this, rawMsg);
+        var msg = rawMsg == null ? null : Host?.Merge(this, rawMsg);
         if (msg != null)
         {
             OnMessage(msg);

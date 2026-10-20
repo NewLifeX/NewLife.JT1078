@@ -75,6 +75,8 @@ public class JT1078Server : NetServer<JT1078Session>
     /// <returns>完整帧（原子包或合并完成），未完成时返回 null</returns>
     public virtual JTMessage? Merge(JT1078Session session, JTMessage msg)
     {
+        if (msg == null) return null;
+
         if (msg.PacketFlag == PacketFlags.Alone) return msg;
 
         // 无 SIM 无法按设备聚合分包，直接按独立包处理
