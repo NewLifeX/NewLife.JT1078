@@ -56,8 +56,8 @@ namespace NewLife.JT1078.Protocols
         /// <remarks>
         /// 0000：原子包，不可被拆分
         /// 0001：分包处理时的第一个包
-        /// 0010：分包处理是的最后一个包
-        /// 0011：分包处理时间的中间包
+        /// 0010：分包处理时的最后一个包
+        /// 0011：分包处理时的中间包
         /// </remarks>
         public PacketFlags PacketFlag { get; set; }
 
@@ -69,7 +69,7 @@ namespace NewLife.JT1078.Protocols
         /// <remarks>该帧与上一个关键帧之间的时间间隔，单位毫秒（ms），当数据类型为非视频帧时，则没有该字段</remarks>
         public UInt16 LastIFrameInterval { get; set; }
 
-        /// <summary>上一个关键帧间隔</summary>
+        /// <summary>上一帧间隔</summary>
         /// <remarks>该帧与上一帧之间的时间间隔，单位毫秒（ms），当数据类型为非视频帧时，则没有该字段</remarks>
         public UInt16 LastFrameInterval { get; set; }
         #endregion

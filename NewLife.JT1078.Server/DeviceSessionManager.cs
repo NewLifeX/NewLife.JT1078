@@ -119,6 +119,23 @@ public class DeviceSessionManager : DisposeBase
         }
     }
 
+    /// <summary>注销设备会话。仅当键仍指向指定会话时移除，避免重连后误删新会话</summary>
+    /// <param name="key">设备标识</param>
+    /// <param name="session">会话对象</param>
+    /// <returns>是否移除</returns>
+    public Boolean Unregister(String key, Object session)
+    {
+        if (!_sessions.TryGetValue(key, out var current) || !ReferenceEquals(current, session)) return false;
+
+        if (_sessions.TryRemove(key, out _))
+        {
+            WriteLog("Unregister device session {0}", key);
+            return true;
+        }
+
+        return false;
+    }
+
     /// <summary>获取本地设备会话</summary>
     public Object GetSession(String key)
     {

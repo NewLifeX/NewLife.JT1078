@@ -47,11 +47,15 @@ public class JT1078Session : NetSession<JT1078Server>
         if (DeviceKey != null)
         {
             var mgr = Host?.DeviceManager;
-            mgr?.Unregister(DeviceKey);
+            mgr?.Unregister(DeviceKey, this);
         }
 
-        // 设备下线时清理消息中枢，避免订阅者与缓存泄漏
-        if (!SIM.IsNullOrEmpty()) MsgHubRegistry.Remove(SIM, Channel);
+        // 设备下线时清理消息中枢，避免订阅者与缓存泄漏；仅当中枢仍归属当前会话
+        if (!SIM.IsNullOrEmpty())
+        {
+            var hub = MsgHubRegistry.Get(SIM, Channel);
+            if (hub != null && ReferenceEquals(hub.Device, this)) MsgHubRegistry.Remove(SIM, Channel);
+        }
     }
     #endregion
 
@@ -77,7 +81,7 @@ public class JT1078Session : NetSession<JT1078Server>
             if (DeviceKey != key)
             {
                 // 通道变化时先注销旧键，避免设备字典残留
-                if (DeviceKey != null) Host?.DeviceManager?.Unregister(DeviceKey);
+                if (DeviceKey != null) Host?.DeviceManager?.Unregister(DeviceKey, this);
 
                 DeviceKey = key;
                 Host?.DeviceManager?.Register(DeviceKey, this);

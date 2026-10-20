@@ -39,6 +39,22 @@ public class DeviceSessionManagerTests
         Assert.False(mgr.Contains("138001380000_1"));
     }
 
+    [Fact(DisplayName = "注销会话：仅移除同一会话")]
+    public void Unregister_OnlySameSession()
+    {
+        using var mgr = new DeviceSessionManager(null);
+
+        var oldSession = new Object();
+        var newSession = new Object();
+
+        mgr.Register("138001380000_1", newSession);
+        Assert.False(mgr.Unregister("138001380000_1", oldSession));
+        Assert.True(mgr.Contains("138001380000_1"));
+
+        Assert.True(mgr.Unregister("138001380000_1", newSession));
+        Assert.False(mgr.Contains("138001380000_1"));
+    }
+
     [Fact(DisplayName = "清理超时 UDP 设备会话")]
     public void RemoveExpired_UdpSession()
     {
