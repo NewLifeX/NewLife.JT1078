@@ -53,7 +53,7 @@ namespace NewLife.JT1078.H264
                             if (lastIndex.HasValue)
                             {
                                 var tmp = buffer.Slice(lastIndex.Value, i - state - 1 - lastIndex.Value);
-                                h264NALUs.Add(Create(package, tmp, state + 1));
+                                if (tmp.Length > 0) h264NALUs.Add(Create(package, tmp, state + 1));
                             }
                             lastIndex = i;
                             laststate = state + 1;
@@ -110,23 +110,26 @@ namespace NewLife.JT1078.H264
                             if (lastIndex.HasValue)
                             {
                                 var tmp = buffer.Slice(lastIndex.Value, i - state - 1 - lastIndex.Value);
-                                var nalu = Create(package, tmp, state + 1);
-                                if (nalu.NALUHeader.NalUnitType == NalUnitType.PPS)
-                                    jT1078AVFrame.PPS = nalu;
-                                else if (nalu.NALUHeader.NalUnitType == NalUnitType.SPS)
+                                if (tmp.Length > 0)
                                 {
-                                    jT1078AVFrame.SPS = nalu;
-                                    var rawData = DiscardEmulationPreventionBytes(jT1078AVFrame.SPS.RawData);
-                                    if (H264SpsParser.TryParse(rawData, out var spsInfo))
+                                    var nalu = Create(package, tmp, state + 1);
+                                    if (nalu.NALUHeader.NalUnitType == NalUnitType.PPS)
+                                        jT1078AVFrame.PPS = nalu;
+                                    else if (nalu.NALUHeader.NalUnitType == NalUnitType.SPS)
                                     {
-                                        jT1078AVFrame.Width = spsInfo.width;
-                                        jT1078AVFrame.Height = spsInfo.height;
-                                        jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
-                                        jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
-                                        jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                                        jT1078AVFrame.SPS = nalu;
+                                        var rawData = DiscardEmulationPreventionBytes(jT1078AVFrame.SPS.RawData);
+                                        if (H264SpsParser.TryParse(rawData, out var spsInfo))
+                                        {
+                                            jT1078AVFrame.Width = spsInfo.width;
+                                            jT1078AVFrame.Height = spsInfo.height;
+                                            jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
+                                            jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
+                                            jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                                        }
                                     }
+                                    jT1078AVFrame.Nalus.Add(nalu);
                                 }
-                                jT1078AVFrame.Nalus.Add(nalu);
                             }
                             lastIndex = i;
                             laststate = state + 1;
@@ -197,7 +200,7 @@ namespace NewLife.JT1078.H264
                             if (lastIndex.HasValue)
                             {
                                 var tmp = buffer.Slice(lastIndex.Value, i - state - 1 - lastIndex.Value);
-                                h264NALUs.Add(Create(package, tmp, lastIndex.Value));
+                                if (tmp.Length > 0) h264NALUs.Add(Create(package, tmp, lastIndex.Value));
                             }
                             lastIndex = i;
                             laststate = state + 1;

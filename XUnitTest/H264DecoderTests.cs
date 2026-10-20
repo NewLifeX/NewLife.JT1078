@@ -205,6 +205,33 @@ public class H264DecoderTests
         Assert.Equal(3, decoder.ParseNALU(msg).Count);
     }
 
+    [Fact(DisplayName = "连续起始码不生成空NAL单元")]
+    public void ParseAVFrame_ConsecutiveStartCodes()
+    {
+        var nalData = new Byte[]
+        {
+            0x00, 0x00, 0x01,
+            0x00, 0x00, 0x01,
+            0x65, 0x88, 0x84,
+        };
+        var msg = new JTMessage
+        {
+            SIM = "138001380000",
+            Channel = 1,
+            Type = AVTypes.H264,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Alone,
+            Timestamp = 1000,
+            Payload = new ArrayPacket(nalData),
+        };
+
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
+
+        Assert.Single(frame.Nalus);
+        Assert.Single(decoder.ParseNALU(msg));
+    }
+
     [Fact(DisplayName = "DiscardEmulationPreventionBytes 剔除防竞争字节")]
     public void DiscardEmulationPreventionBytes_Test()
     {
