@@ -149,7 +149,15 @@ public class JT1078Session : NetSession<JT1078Server>
     /// <param name="dataType">数据类型</param>
     /// <param name="payload">负载数据</param>
     /// <returns>发送的字节数</returns>
-    public virtual Int32 SendJT(AVTypes avtype, DataTypes dataType, IPacket payload)
+    public virtual Int32 SendJT(AVTypes avtype, DataTypes dataType, IPacket payload) => SendJT(avtype, dataType, payload, -1);
+
+    /// <summary>向终端发送下行信令</summary>
+    /// <param name="avtype">音视频编码类型</param>
+    /// <param name="dataType">数据类型</param>
+    /// <param name="payload">负载数据</param>
+    /// <param name="channel">逻辑通道号，小于0时使用会话最近通道</param>
+    /// <returns>发送的字节数</returns>
+    public virtual Int32 SendJT(AVTypes avtype, DataTypes dataType, IPacket payload, Int32 channel)
     {
         var msg = new JTMessage
         {
@@ -158,7 +166,7 @@ public class JT1078Session : NetSession<JT1078Server>
             Completed = true,
             Sequence = (UInt16)Interlocked.Increment(ref _gid),
             SIM = SIM,
-            Channel = 0,
+            Channel = (Byte)(channel >= 0 ? channel : Channel),
             DataType = dataType,
             PacketFlag = PacketFlags.Alone,
             Timestamp = (UInt64)DateTime.Now.ToLong(),

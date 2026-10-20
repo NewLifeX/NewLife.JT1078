@@ -174,7 +174,7 @@ public class DeviceSessionManager : DisposeBase
         // 先尝试本地发送
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
-            session.SendJT(avtype, dataType, payload);
+            session.SendJT(avtype, dataType, payload, channel);
             WriteLog("Publish sent locally key={0} type={1}", key, dataType);
             return true;
         }
@@ -188,8 +188,11 @@ public class DeviceSessionManager : DisposeBase
 
             Bus.PublishAsync(message, null, default);
             WriteLog("Publish broadcast key={0} message={1}", key, message);
+
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     /// <summary>异步向设备下发信令。优先本地查找，未命中则广播到集群</summary>
@@ -202,7 +205,7 @@ public class DeviceSessionManager : DisposeBase
         // 先尝试本地发送
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
-            session.SendJT(avtype, dataType, payload);
+            session.SendJT(avtype, dataType, payload, channel);
             WriteLog("PublishAsync sent locally key={0} type={1}", key, dataType);
             return true;
         }
@@ -216,8 +219,11 @@ public class DeviceSessionManager : DisposeBase
 
             await Bus.PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
             WriteLog("PublishAsync broadcast key={0}", key);
+
+            return true;
         }
-        return true;
+
+        return false;
     }
     #endregion
 
@@ -249,7 +255,11 @@ public class DeviceSessionManager : DisposeBase
             if (!String.IsNullOrEmpty(hex) && hex.Length > 2)
                 data = new ArrayPacket(hex.ToHex());
 
-            session.SendJT(avtype, dataType, data);
+            // 键格式 SIM_Channel，取最后一个下划线之后的通道号
+            var p2 = key.LastIndexOf('_');
+            var channel = p2 >= 0 && Int32.TryParse(key[(p2 + 1)..], out var ch) ? ch : -1;
+
+            session.SendJT(avtype, dataType, data, channel);
             WriteLog("OnMessage hit local session key={0} type={1}", key, dataType);
         }
 

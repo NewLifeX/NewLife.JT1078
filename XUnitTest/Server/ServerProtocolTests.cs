@@ -287,7 +287,7 @@ public class ServerProtocolTests
 
             Assert.Equal("138001380000", msg.SIM);
             Assert.Equal(DataTypes.VideoIFrame, msg.DataType);
-            Assert.Equal(0, msg.Channel);
+            Assert.Equal(1, msg.Channel);
             Assert.Equal(payload, msg.Payload.GetSpan().ToArray());
         }
         finally
