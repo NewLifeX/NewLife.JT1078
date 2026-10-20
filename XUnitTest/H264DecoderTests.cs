@@ -102,4 +102,76 @@ public class H264DecoderTests
         // ref struct 仅编译验证
         _ = reader;
     }
+
+    [Fact(DisplayName = "H264SpsParser 解析基线SPS分辨率")]
+    public void SpsParser_Baseline()
+    {
+        // Baseline 1280x720
+        var sps = new Byte[] { 0x67, 0x42, 0x00, 0x1E, 0xF4, 0x02, 0x80, 0x2D, 0xC8 };
+
+        Assert.True(H264SpsParser.TryParse(sps, out var info));
+        Assert.Equal(1280, info.width);
+        Assert.Equal(720, info.height);
+        Assert.Equal(66, info.profileIdc);
+        Assert.Equal(30, info.levelIdc);
+    }
+
+    [Fact(DisplayName = "H264SpsParser 解析高档SPS")]
+    public void SpsParser_HighProfile()
+    {
+        // High 10 1280x720
+        var sps = new Byte[] { 0x67, 0x64, 0x00, 0x1F, 0xA4, 0x8E, 0x80, 0x50, 0x05, 0xB9 };
+
+        Assert.True(H264SpsParser.TryParse(sps, out var info));
+        Assert.Equal(1280, info.width);
+        Assert.Equal(720, info.height);
+        Assert.Equal(100, info.profileIdc);
+    }
+
+    [Fact(DisplayName = "H264SpsParser 拒绝截断SPS而不崩溃")]
+    public void SpsParser_Invalid()
+    {
+        // 截断的SPS在 ExpGolombReader 中会无限递归导致栈溢出
+        var truncated = new Byte[] { 0x67, 0x42, 0x00, 0x1E, 0x8D, 0x40, 0x28, 0x02, 0xE0, 0x3C };
+        Assert.False(H264SpsParser.TryParse(truncated, out _));
+        Assert.False(H264SpsParser.TryParse(new Byte[] { 0x67, 0x42 }, out _));
+        Assert.False(H264SpsParser.TryParse([], out _));
+    }
+
+    [Fact(DisplayName = "ParseAVFrame 遇到截断SPS不崩溃")]
+    public void ParseAVFrame_TruncatedSps()
+    {
+        var nalData = new Byte[]
+        {
+            0x00, 0x00, 0x01, 0x67,
+            0x42, 0x00, 0x1E, 0x8D, 0x40, 0x28, 0x02, 0xE0, 0x3C,
+        };
+        var msg = new JTMessage
+        {
+            SIM = "138001380000",
+            Channel = 1,
+            Type = AVTypes.H264,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Alone,
+            Timestamp = 1000,
+            Payload = new ArrayPacket(nalData),
+        };
+
+        var frame = new H264Decoder().ParseAVFrame(msg);
+
+        Assert.NotNull(frame);
+        Assert.NotNull(frame.SPS);
+        Assert.Equal(0, frame.Width);
+        Assert.Equal(0, frame.Height);
+    }
+
+    [Fact(DisplayName = "DiscardEmulationPreventionBytes 剔除防竞争字节")]
+    public void DiscardEmulationPreventionBytes_Test()
+    {
+        var raw = new Byte[] { 0x67, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x03, 0x02 };
+
+        var result = new H264Decoder().DiscardEmulationPreventionBytes(raw);
+
+        Assert.Equal(new Byte[] { 0x67, 0x00, 0x00, 0x01, 0x00, 0x00, 0x02 }, result);
+    }
 }

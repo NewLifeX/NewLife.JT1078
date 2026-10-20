@@ -74,8 +74,8 @@ namespace NewLife.JT1078.FMp4
             var writer = new Fmp4MessagePackWriter(buffer);
             try
             {
-                var h264GolombReader = new ExpGolombReader(sps.RawData);
-                var spsInfo = h264GolombReader.ReadSPS();
+                var rawData = h264Decoder.DiscardEmulationPreventionBytes(sps.RawData);
+                if (!H264SpsParser.TryParse(rawData, out var spsInfo)) return null;
                 //moov
                 var movieBox = new MovieBox
                 {

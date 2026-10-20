@@ -102,13 +102,15 @@ namespace NewLife.JT1078.H264
                                 else if (nalu.NALUHeader.NalUnitType == NalUnitType.SPS)
                                 {
                                     jT1078AVFrame.SPS = nalu;
-                                    var h264GolombReader = new ExpGolombReader(jT1078AVFrame.SPS.RawData);
-                                    var spsInfo = h264GolombReader.ReadSPS();
-                                    jT1078AVFrame.Width = spsInfo.width;
-                                    jT1078AVFrame.Height = spsInfo.height;
-                                    jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
-                                    jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
-                                    jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                                    var rawData = DiscardEmulationPreventionBytes(jT1078AVFrame.SPS.RawData);
+                                    if (H264SpsParser.TryParse(rawData, out var spsInfo))
+                                    {
+                                        jT1078AVFrame.Width = spsInfo.width;
+                                        jT1078AVFrame.Height = spsInfo.height;
+                                        jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
+                                        jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
+                                        jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                                    }
                                 }
                                 jT1078AVFrame.Nalus.Add(nalu);
                             }
@@ -131,13 +133,15 @@ namespace NewLife.JT1078.H264
                 else if (nalu.NALUHeader.NalUnitType == NalUnitType.SPS)
                 {
                     jT1078AVFrame.SPS = nalu;
-                    var h264GolombReader = new ExpGolombReader(jT1078AVFrame.SPS.RawData);
-                    var spsInfo = h264GolombReader.ReadSPS();
-                    jT1078AVFrame.Width = spsInfo.width;
-                    jT1078AVFrame.Height = spsInfo.height;
-                    jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
-                    jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
-                    jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                    var rawData = DiscardEmulationPreventionBytes(jT1078AVFrame.SPS.RawData);
+                    if (H264SpsParser.TryParse(rawData, out var spsInfo))
+                    {
+                        jT1078AVFrame.Width = spsInfo.width;
+                        jT1078AVFrame.Height = spsInfo.height;
+                        jT1078AVFrame.LevelIdc = spsInfo.levelIdc;
+                        jT1078AVFrame.ProfileIdc = spsInfo.profileIdc;
+                        jT1078AVFrame.ProfileCompat = (Byte)spsInfo.profileCompat;
+                    }
                 }
                 jT1078AVFrame.Nalus.Add(nalu);
             }

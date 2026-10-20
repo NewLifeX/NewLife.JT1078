@@ -225,8 +225,7 @@ public class FlvEncoder
                 if (sps == null) return null;
 
                 var rawData = h264Decoder.DiscardEmulationPreventionBytes(sps.RawData);
-                var h264GolombReader = new ExpGolombReader(rawData);
-                var spsInfo = h264GolombReader.ReadSPS();
+                if (!H264SpsParser.TryParse(rawData, out var spsInfo)) return null;
                 var frame = new AVFrame
                 {
                     Width = spsInfo.width,
