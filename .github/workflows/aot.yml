@@ -1,5 +1,10 @@
 name: aot
 
+# NativeAOT 兼容性矩阵（参考 NewLife.Audio）：
+# win-x64 / linux-x64 / linux-arm64 为阻断门禁；win-arm64 / osx-arm64 / osx-x64 为观察期。
+# NativeAOT 官方不支持跨 OS 编译，每个 RID 使用对应原生 runner 发布运行。
+# 同一冒烟工程先以 JIT 运行作为对照，再发布原生镜像；非 0 退出码或发布日志出现 IL 裁剪告警即失败。
+
 on:
   push:
     branches: [ '*' ]
@@ -7,21 +12,82 @@ on:
     branches: [ '*' ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   native-aot:
-
-    runs-on: ubuntu-latest
+    name: nativeaot (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    continue-on-error: ${{ matrix.experimental == true }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            bin: AotSmoke.exe
+          - rid: win-arm64
+            os: windows-11-arm
+            bin: AotSmoke.exe
+            experimental: true
+          - rid: linux-x64
+            os: ubuntu-latest
+            bin: AotSmoke
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
+            bin: AotSmoke
+          - rid: osx-arm64
+            os: macos-latest
+            bin: AotSmoke
+            experimental: true
+          - rid: osx-x64
+            os: macos-15-intel
+            bin: AotSmoke
+            experimental: true
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup dotNET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: |
-          10.x
-    - name: Install AOT toolchain
+        dotnet-version: 10.x
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+    - name: Install NativeAOT Prerequisites (Linux)
+      if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    - name: JIT Baseline
+      run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
+    - name: JIT Baseline (invariant globalization)
+      env:
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: '1'
+      run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
     - name: Publish NativeAOT
-      run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -o out
-    - name: Run smoke
-      run: ./out/AotSmoke
+      shell: bash
+      run: |
+        set -o pipefail
+        dotnet publish AotSmoke/AotSmoke.csproj -c Release -r ${{ matrix.rid }} -o AotSmoke/bin/aot-out 2>&1 | tee aot-publish.log
+        # 已知上游 NewLife.Audio 的 IL2104（其自身裁剪告警）；本项目程序集与源码必须零 IL 告警
+        if grep -E 'warning IL[0-9]{4}' aot-publish.log | grep -vF "Assembly 'NewLife.Audio' produced trim warnings" | grep -q .; then
+          echo "::error::NativeAOT 发布出现 IL 裁剪告警，请检查 ILLink.Descriptors.xml 或代码中的反射用法"
+          grep -E 'warning IL[0-9]{4}' aot-publish.log | grep -vF "Assembly 'NewLife.Audio' produced trim warnings"
+          exit 1
+        fi
+    - name: Run NativeAOT Smoke
+      shell: bash
+      run: ./AotSmoke/bin/aot-out/${{ matrix.bin }}
+    - name: Run NativeAOT Smoke (invariant globalization)
+      shell: bash
+      env:
+        DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: '1'
+      run: ./AotSmoke/bin/aot-out/${{ matrix.bin }}
+    - name: Upload publish log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: aot-publish-${{ matrix.rid }}
+        path: aot-publish.log
+        if-no-files-found: ignore

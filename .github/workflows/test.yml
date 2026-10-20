@@ -1,5 +1,11 @@
 name: test
 
+# CI 基线（参考 NewLife.Core）：
+# - build：Windows 完整编译解决方案，覆盖 net461 / netstandard2.0 / netstandard2.1 / net6.0 / net8.0 / net10.0 目标，
+#          并扫描构建日志中的 IL 裁剪/AOT 告警，作为 NativeAOT 兼容性的构建期门禁。
+# - test：Windows / Linux 双平台 × net8.0 / net10.0 双运行时，覆盖率与 TRX 结果留档。
+# - pack：打包 Core 与 Server，校验 nupkg 目标框架资产与 README/图标完整，防止发布包缺资产。
+
 on:
   push:
     branches: [ '*' ]
@@ -7,9 +13,15 @@ on:
     branches: [ '*' ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: build solution
+    runs-on: windows-latest
+    timeout-minutes: 30
 
     steps:
     - uses: actions/checkout@v4
@@ -17,14 +29,84 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          6.x
-          7.x
           8.x
-          9.x
           10.x
+        cache: true
+        cache-dependency-path: '**/*.csproj'
     - name: Build
-      run: dotnet build -c Release
+      shell: pwsh
+      run: |
+        # 构建日志包含大量警告，保持 Continue 以免原生 stderr 在 Stop 模式下中断脚本
+        $ErrorActionPreference = 'Continue'
+        dotnet build NewLife.JT1078.slnx -c Release 2>&1 | Tee-Object -FilePath build.log
+        $code = $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
+        if ($code -ne 0) { exit $code }
 
+        $ilWarnings = Select-String -Path build.log -Pattern 'warning IL\d{4}'
+        if ($ilWarnings) {
+          Write-Host "::error::检测到 $($ilWarnings.Count) 条 AOT/裁剪分析器告警，NativeAOT 兼容性被破坏"
+          $ilWarnings | ForEach-Object { Write-Host $_ }
+          exit 1
+        }
+        Write-Host '未检测到 IL 裁剪/AOT 告警'
+
+  test:
+    name: test (${{ matrix.os }}, ${{ matrix.tfm }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        tfm: [net8.0, net10.0]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.x
+          10.x
+        cache: true
+        cache-dependency-path: '**/*.csproj'
     - name: Test
-      run: dotnet test -c Release
-  #test:
+      run: dotnet test XUnitTest/XUnitTest.csproj -c Release -f ${{ matrix.tfm }} --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test-${{ matrix.os }}-${{ matrix.tfm }}.trx" --results-directory TestResults
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.tfm }}
+        path: TestResults/**
+        if-no-files-found: ignore
+
+  pack:
+    name: pack & package check
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.x
+          10.x
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+    - name: Pack
+      run: |
+        dotnet pack NewLife.JT1078/NewLife.JT1078.csproj -c Release -o out
+        dotnet pack NewLife.JT1078.Server/NewLife.JT1078.Server.csproj -c Release -o out
+    - name: Verify nupkg assets
+      shell: pwsh
+      run: pwsh -File ./check-packages.ps1
+    - name: Upload packages
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: nupkg
+        path: out/**
+        if-no-files-found: ignore

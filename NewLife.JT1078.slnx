@@ -1,0 +1,13 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="AotSmoke/AotSmoke.csproj" />
+  <Project Path="NewLife.JT1078.Client/NewLife.JT1078.Client.csproj" />
+  <Project Path="NewLife.JT1078.Server/NewLife.JT1078.Server.csproj" />
+  <Project Path="NewLife.JT1078.Web/NewLife.JT1078.Web.csproj" />
+  <Project Path="NewLife.JT1078/NewLife.JT1078.csproj" />
+  <Project Path="XUnitTest/XUnitTest.csproj" />
+</Solution>

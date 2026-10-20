@@ -1,14 +1,20 @@
 name: publish
 
+# 正式发版（参考 NewLife.Core）：tag v* 触发，日期版本号，同时推送 GitHub Packages 与 NuGet.org，符号包仅推 NuGet.org。
+
 on:
   push:
     tags: [ v* ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-publish:
-
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - uses: actions/checkout@v4
@@ -16,15 +22,34 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
-          6.x
-          7.x
           8.x
-          9.x
           10.x
-    - name: Build
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+    - name: Get Version
+      run: echo "VERSION=$(date '+%Y.%m%d')" >> $GITHUB_ENV
+    - name: Restore
       run: |
-        dotnet pack -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
-        dotnet pack -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
-    - name: Publish
+        dotnet restore NewLife.JT1078/NewLife.JT1078.csproj
+        dotnet restore NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
+    - name: Pack
       run: |
-        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
+        dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
+    - name: Verify packages
+      run: pwsh -File ./check-packages.ps1
+    - name: Publish GitHub Packages
+      # GitHub Packages 不支持符号包，显式跳过 snupkg
+      run: |
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --no-symbols --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
+    - name: Publish NuGet.org
+      run: |
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --no-symbols --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push ./out/*.snupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+    - name: Upload packages
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: nupkg
+        path: out/**
+        if-no-files-found: ignore

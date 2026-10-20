@@ -7,7 +7,14 @@ using NewLife.JT1078.Protocols;
 using NewLife.JT1078.Server;
 
 // NativeAOT 冒烟：协议编解码 + 消息体反射序列化 + 服务端装配 + 运行时多语言，确认裁剪器保留类型与词表
-Localization.Culture = new CultureInfo("zh-Hans");
+// 全球化不变模式（DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1）下无法构造 zh-Hans，保留默认文化并回退英文源文断言
+try
+{
+    Localization.Culture = new CultureInfo("zh-Hans");
+}
+catch (CultureNotFoundException)
+{
+}
 
 var msg = new JTMessage
 {

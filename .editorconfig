@@ -23,5 +23,5 @@ indent_size = 2
 [*.yml]
 indent_size = 2
 
-[*.sln]
-indent_style = tab
+[*.slnx]
+indent_size = 2
