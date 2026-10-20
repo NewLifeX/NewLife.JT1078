@@ -59,6 +59,18 @@ public partial class LiveStreamViewModel : ObservableObject
     [ObservableProperty]
     private Int32 _duration;
 
+    /// <summary>内置播放器拉流地址，为空表示未播放</summary>
+    [ObservableProperty]
+    private String? _playbackUrl;
+
+    /// <summary>是否由内置播放器渲染</summary>
+    [ObservableProperty]
+    private Boolean _isPlayerActive;
+
+    /// <summary>播放区域提示文本</summary>
+    [ObservableProperty]
+    private String _playerHint = "视频播放区域：选择 FLV / fMP4 / HLS 等格式，使用 HTTP 模式后点击播放";
+
     /// <summary>日志列表</summary>
     public ObservableCollection<MessageLogEntry> LogEntries { get; } = [];
 
@@ -84,46 +96,52 @@ public partial class LiveStreamViewModel : ObservableObject
 
         try
         {
-            Status = "⏳ 连接中...";
-            IsPlaying = true;
+            var format = Formats[SelectedFormat].ToLowerInvariant();
 
-            var format = Formats[SelectedFormat].ToLower();
-            if (format == "fmp4") format = "mp4";
-
-            // HLS 使用不同的端点
-            String url;
-            if (format == "hls")
+            // HLS 走 HTTP 播放列表，WebSocket 模式无法承载
+            if (format == "hls" && SelectedMode == 1)
             {
-                url = $"{_config.WsBaseUrl}/hls.m3u8?sim={Sim}&channel={Channel}&token={_config.Token}";
-                // HLS 通过 HTTP 获取，不需要 WebSocket
-                Status = "ℹ️ HLS 请在外部播放器中打开此地址: " + url;
-                IsPlaying = false;
+                Status = "ℹ️ HLS 仅支持 HTTP 模式，请切换到 HTTP 后播放";
                 return;
             }
 
-            if (SelectedMode == 1) // WebSocket
+            Status = "⏳ 连接中...";
+            IsPlaying = true;
+            StreamStartTime = DateTime.Now;
+
+            if (SelectedMode == 0) // HTTP
             {
-                url = $"{_config.WsBaseUrl}/live.{format}?sim={Sim}&channel={Channel}&token={_config.Token}";
-            }
-            else // HTTP
-            {
-                url = $"{_config.HttpBaseUrl}/live.{format}?sim={Sim}&channel={Channel}&token={_config.Token}";
+                var url = LiveUrlBuilder.BuildHttpUrl(_config, format, Sim, Channel);
+                if (LiveUrlBuilder.IsPlayable(format))
+                {
+                    PlaybackUrl = url;
+                    IsPlayerActive = true;
+                    Status = "▶ 播放中（内置播放器）：" + url;
+                }
+                else
+                {
+                    // PCM 等裸流无法由播放器解析，仅提示外部播放器地址
+                    Status = "ℹ️ 该格式为裸流，请用外部播放器打开：" + url;
+                    IsPlaying = false;
+                }
+
+                return;
             }
 
-            if (SelectedMode == 1)
-            {
-                _wsService = new WsStreamService();
-                _wsService.OnDataReceived += OnDataReceived;
-                _wsService.OnError += OnError;
-                _wsService.OnConnectionChanged += OnConnectionChanged;
-                await _wsService.ConnectAsync(url);
-            }
-            else
-            {
-                // HTTP 模式 - 打开链接到外部播放器或显示 URL
-                Status = "ℹ️ HTTP 流地址: " + url;
-                IsPlaying = false;
-            }
+            // WebSocket 模式
+            var fmt = format == "fmp4" ? "mp4" : format;
+            var wsUrl = $"{_config.WsBaseUrl}/live.{fmt}?sim={Sim}&channel={Channel}&token={_config.Token}";
+
+            _wsService = new WsStreamService();
+            _wsService.OnDataReceived += OnDataReceived;
+            _wsService.OnError += OnError;
+            _wsService.OnConnectionChanged += OnConnectionChanged;
+            await _wsService.ConnectAsync(wsUrl);
+        }
+        catch (Exception ex) when (ex is ArgumentException or ArgumentOutOfRangeException)
+        {
+            Status = $"❌ 参数错误: {ex.Message}";
+            IsPlaying = false;
         }
         catch (Exception ex)
         {
@@ -136,6 +154,28 @@ public partial class LiveStreamViewModel : ObservableObject
     [RelayCommand]
     private async Task Stop()
     {
+        await StopInternalAsync();
+        Status = "已停止";
+    }
+
+    /// <summary>停止播放并复位播放状态，供视图在离开页面时调用</summary>
+    public void StopPlayback()
+    {
+        PlaybackUrl = null;
+        IsPlayerActive = false;
+        IsPlaying = false;
+    }
+
+    /// <summary>回报内置播放器错误并复位播放状态</summary>
+    /// <param name="message">错误描述</param>
+    public void ReportPlayerError(String message)
+    {
+        StopPlayback();
+        Status = "❌ " + message;
+    }
+
+    private async Task StopInternalAsync()
+    {
         if (_wsService != null)
         {
             await _wsService.DisconnectAsync();
@@ -143,8 +183,7 @@ public partial class LiveStreamViewModel : ObservableObject
             _wsService = null;
         }
 
-        IsPlaying = false;
-        Status = "已停止";
+        StopPlayback();
     }
 
     private void OnDataReceived(Byte[] data)

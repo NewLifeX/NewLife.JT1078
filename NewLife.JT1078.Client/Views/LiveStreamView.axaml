@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:NewLife.JT1078.Client.ViewModels"
+             xmlns:controls="using:NewLife.JT1078.Client.Controls"
              x:Class="NewLife.JT1078.Client.Views.LiveStreamView"
              x:DataType="vm:LiveStreamViewModel">
     <Grid RowDefinitions="Auto,Auto,Auto,*">
@@ -47,15 +48,16 @@
             </StackPanel>
         </Border>
 
-        <!-- 视频播放区域（占位） -->
-        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="4">
+        <!-- 视频播放区域：LibVLC 原生窗口渲染 -->
+        <Border Grid.Row="3" BorderBrush="#333" BorderThickness="1" CornerRadius="4" ClipToBounds="True">
             <Grid>
-                <!-- LibVLC 视频播放器将在后面集成 -->
                 <Border Background="#0a0a1e">
-                    <TextBlock Text="视频播放区域 (LibVLC)" Foreground="#666"
+                    <TextBlock Text="{Binding PlayerHint}" Foreground="#666" TextWrapping="Wrap"
+                               TextAlignment="Center" Margin="20"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                FontSize="16" />
                 </Border>
+                <controls:VideoSurface x:Name="Video" IsVisible="{Binding IsPlayerActive}" />
             </Grid>
         </Border>
     </Grid>
