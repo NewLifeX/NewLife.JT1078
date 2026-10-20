@@ -37,6 +37,32 @@ public class JTMessageBehaviorTests
         Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, first.Payload.ToArray());
     }
 
+    [Fact(DisplayName = "链式负载可构建完整整帧")]
+    public void ToPacket_ChainedPayload()
+    {
+        var msg = CreateMessage(PacketFlags.Alone, [1, 2, 3]);
+        msg.Payload = new ArrayPacket([1, 2, 3]).Append(new ArrayPacket([4, 5, 6]));
+
+        var data = msg.ToPacket().GetSpan().ToArray();
+
+        // 视频帧头 30 字节，长度字段位于负载前两字节，负载内容需完整拼接
+        Assert.Equal(36, data.Length);
+        Assert.Equal(6, (data[28] << 8) | data[29]);
+        Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, data[30..]);
+    }
+
+    [Fact(DisplayName = "Clone 深拷贝链式负载")]
+    public void Clone_ChainedPayload()
+    {
+        var msg = CreateMessage(PacketFlags.Alone, [1, 2, 3]);
+        msg.Payload = new ArrayPacket([1, 2, 3]).Append(new ArrayPacket([4, 5, 6]));
+
+        var copy = msg.Clone();
+
+        Assert.NotSame(msg.Payload, copy.Payload);
+        Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, copy.Payload!.ToArray());
+    }
+
     [Fact(DisplayName = "分包合并：原子包不可合并")]
     public void Append_Alone()
     {
