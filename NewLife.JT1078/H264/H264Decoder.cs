@@ -1,3 +1,4 @@
+using NewLife.Data;
 using NewLife.JT1078.Protocols;
 using NewLife.Video.Codecs;
 
@@ -5,6 +6,19 @@ namespace NewLife.JT1078.H264
 {
     public class H264Decoder
     {
+        /// <summary>获取连续负载，分段链式数据先合并为连续缓冲区</summary>
+        /// <param name="packet">负载</param>
+        /// <param name="buffer">分段时返回合并后的缓冲区，供 Span 引用保持存活</param>
+        /// <returns>连续数据的 Span</returns>
+        private static ReadOnlySpan<Byte> GetSpan(IPacket packet, out Byte[]? buffer)
+        {
+            buffer = null;
+            if (packet.Next == null) return packet.GetSpan();
+
+            buffer = packet.ToArray();
+            return buffer.AsSpan();
+        }
+
         /// <summary>
         /// <see cref="https://github.com/samirkumardas/jmuxer/blob/master/src/parsers/h264.js"/>
         /// </summary>
@@ -18,7 +32,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
+            ReadOnlySpan<Byte> buffer = GetSpan(package.Payload, out _);
             while (i < length)
             {
                 value = buffer[i++];
@@ -75,7 +89,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
+            ReadOnlySpan<Byte> buffer = GetSpan(package.Payload, out _);
             while (i < length)
             {
                 value = buffer[i++];
@@ -162,7 +176,7 @@ namespace NewLife.JT1078.H264
             Int32? lastIndex = null;
             Int32 length = package.Payload.Total;
             Byte value;
-            ReadOnlySpan<Byte> buffer = package.Payload.GetSpan();
+            ReadOnlySpan<Byte> buffer = GetSpan(package.Payload, out _);
             while (i < length)
             {
                 value = buffer[i++];

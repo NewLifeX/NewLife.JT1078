@@ -165,6 +165,46 @@ public class H264DecoderTests
         Assert.Equal(0, frame.Height);
     }
 
+    [Fact(DisplayName = "ParseAVFrame 支持链式分段负载")]
+    public void ParseAVFrame_ChainedPayload()
+    {
+        var data = new Byte[]
+        {
+            0x00, 0x00, 0x01, 0x67,
+            0x42, 0x00, 0x1E, 0xF4, 0x02, 0x80, 0x2D, 0xC8,
+            0x00, 0x00, 0x01, 0x68,
+            0xCE, 0x3C, 0x80,
+            0x00, 0x00, 0x01, 0x65,
+            0x88, 0x84, 0x00, 0x10,
+        };
+        // 模拟分包合并后的分段链，切点落在起始码中间
+        var payload = new ArrayPacket(data.AsSpan(0, 6).ToArray())
+            .Append(new ArrayPacket(data.AsSpan(6, 7).ToArray()))
+            .Append(new ArrayPacket(data.AsSpan(13).ToArray()));
+
+        // 链式负载首段不包含全部数据，验证按连续缓冲区解析
+        Assert.True(payload.Total > payload.GetSpan().Length);
+
+        var msg = new JTMessage
+        {
+            SIM = "138001380000",
+            Channel = 1,
+            Type = AVTypes.H264,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Alone,
+            Timestamp = 1000,
+            Payload = payload,
+        };
+
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
+
+        Assert.Equal(1280, frame.Width);
+        Assert.Equal(720, frame.Height);
+        Assert.Equal(3, frame.Nalus.Count);
+        Assert.Equal(3, decoder.ParseNALU(msg).Count);
+    }
+
     [Fact(DisplayName = "DiscardEmulationPreventionBytes 剔除防竞争字节")]
     public void DiscardEmulationPreventionBytes_Test()
     {

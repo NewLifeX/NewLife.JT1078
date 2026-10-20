@@ -104,6 +104,8 @@ public class JT1078Server : NetServer<JT1078Session>
         {
             // 末包：合并完成，清除缓存
             Cache.Remove(key);
+            // 链式分段无法被 GetSpan 一次性读取，合并为连续缓冲区，保证音视频解码完整
+            if (first.Payload?.Next != null) first.Payload = new ArrayPacket(first.Payload.ToArray());
             return first;
         }
 

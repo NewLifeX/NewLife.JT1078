@@ -115,6 +115,9 @@ public class ServerProtocolTests
         var merged = server.Merge(session, Make(PacketFlags.Last, [5, 6]));
         Assert.NotNull(merged);
         Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, merged!.Payload!.ToArray());
+        // 合并完成后负载必须是连续缓冲区，供 GetSpan 解码
+        Assert.Null(merged.Payload.Next);
+        Assert.Equal(6, merged.Payload.GetSpan().Length);
     }
 
     private static Int32 GetFreeUdpPort()
