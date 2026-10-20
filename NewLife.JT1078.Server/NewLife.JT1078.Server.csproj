@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net6.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net6.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>NewLife.JT1078.Server</RootNamespace>
     <AssemblyTitle>JT1078 TCP服务端</AssemblyTitle>
     <Description>基于NewLife.Net的JT1078 TCP服务端，支持RTP分包合并和设备会话管理</Description>
@@ -20,16 +20,38 @@
     <LangVersion>latest</LangVersion>
     <SignAssembly>False</SignAssembly>
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;NU5104</NoWarn>
     <WarningsAsErrors>CA2007</WarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
+    <PackageId>$(AssemblyName)</PackageId>
+    <Authors>$(Company)</Authors>
+    <PackageProjectUrl>https://newlifex.com/iot</PackageProjectUrl>
+    <PackageIcon>leaf.png</PackageIcon>
+    <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>JT1078;1078;GB1078;视频通讯;流媒体;服务端;TCP;UDP;FLV;fMP4;HLS;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
+    <PackageReleaseNotes>v1.0 正式版：基于 NewLife.Net 的 JT1078 TCP/UDP 服务端，RTP 分包合并、直播端点、录像回放与集群命令总线；支持 AOT 与多语言</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1019-beta1502" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -38,7 +60,8 @@
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <None Include="..\Readme.MD" Pack="True" PackagePath="\" />
+    <None Include="..\README.md" Pack="True" PackagePath="\" />
   </ItemGroup>
 
 </Project>
+

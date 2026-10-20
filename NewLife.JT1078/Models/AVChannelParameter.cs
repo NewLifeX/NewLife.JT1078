@@ -43,8 +43,12 @@ namespace NewLife.JT1078.Models
             for (var i = 0; i < Count; i++)
             {
                 writer.Write(Items[i]);
-                stream.Seek(-1, SeekOrigin.Begin);
+                // 末尾1字节为AVParameter未使用字节，回退覆盖，避免出现在报文中
+                stream.Seek(-1, SeekOrigin.Current);
             }
+
+            // 最后一个条目的未使用字节同样回收
+            if (stream.CanSeek) stream.SetLength(stream.Position);
 
             return true;
         }

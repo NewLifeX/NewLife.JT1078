@@ -1,0 +1,11 @@
+﻿<!--
+  裁剪保留描述符：消息体模型通过 NewLife.Serialization.Binary 反射读写属性，
+  必须保留模型与序列化特性的成员，否则 NativeAOT/裁剪后属性被移除导致序列化为空。
+  该文件作为 ILLink.Descriptors.xml 嵌入程序集，由使用方的裁剪器自动应用。
+-->
+<linker>
+  <assembly fullname="NewLife.JT1078">
+    <type fullname="NewLife.JT1078.Models.*" preserve="all" />
+    <type fullname="NewLife.JT1078.Serialization.*" preserve="all" />
+  </assembly>
+</linker>

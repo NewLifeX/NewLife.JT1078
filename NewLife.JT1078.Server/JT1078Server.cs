@@ -1,4 +1,5 @@
 using NewLife.Caching;
+using NewLife.Data;
 using NewLife.JT1078.Protocols;
 using NewLife.Log;
 using NewLife.Net;
@@ -15,7 +16,7 @@ public class JT1078Server : NetServer<JT1078Session>
     /// <summary>JT1078 配置</summary>
     public JT1078Setting Setting { get; set; } = new();
 
-    /// <summary>分包缓存。Key=SessionId-Channel-AVType，用于合并 RTP 分包</summary>
+    /// <summary>分包缓存。Key=SIM-Channel-AVType，用于合并 RTP 分包</summary>
     public ICache Cache { get; set; } = MemoryCache.Instance;
 
     /// <summary>服务提供者。用于创建依赖注入作用域</summary>
@@ -30,8 +31,8 @@ public class JT1078Server : NetServer<JT1078Session>
         Name = "JT1078";
         Port = 1078;
 
-        // 添加粘包编解码器
-        Add(new JTCodec());
+        // 启用协议模式：RTP 报文的定界与构建由 JTCodec 承担
+        Protocol = new JTCodec();
     }
 
     /// <summary>启动服务</summary>
@@ -47,12 +48,12 @@ public class JT1078Server : NetServer<JT1078Session>
 
         base.OnStart();
 
-        WriteLog("JT1078 Server started on port {0}", Port);
+        WriteLog("JT1078 server started on port {0}", Port);
     }
 
     /// <summary>RTP 分包合并</summary>
     /// <remarks>
-    /// 按 {SessionId}-{Channel}-{AVType} 缓存中间包，
+    /// 按 {SIM}-{Channel}-{AVType} 缓存首包，
     /// 收到末包后拼接完整帧并返回。
     /// </remarks>
     /// <param name="session">会话</param>
@@ -62,12 +63,13 @@ public class JT1078Server : NetServer<JT1078Session>
     {
         if (msg.PacketFlag == PacketFlags.Alone) return msg;
 
-        var key = $"{session.Remote}-{msg.Channel}-{msg.Type}";
+        // 按 SIM+通道+编码类型 作为分包键，跨连接稳定；避免依赖底层 Socket 会话
+        var key = $"{msg.SIM}-{msg.Channel}-{msg.Type}";
 
         if (msg.PacketFlag == PacketFlags.First)
         {
-            // 首包：缓存起来，等待后续包
-            Cache.Set(key, msg, 600);
+            // 首包：缓存起来，等待后续包。协议模式下消息在处理器返回后即收尾，必须克隆消息留存
+            Cache.Set(key, msg.Clone(), 600);
             return null;
         }
 

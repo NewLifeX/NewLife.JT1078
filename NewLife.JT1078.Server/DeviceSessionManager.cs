@@ -56,7 +56,7 @@ public class DeviceSessionManager : DisposeBase
     public DeviceSessionManager(IServiceProvider serviceProvider)
     {
         _provider = serviceProvider;
-        _tracer = serviceProvider.GetService(typeof(ITracer)) as ITracer;
+        _tracer = serviceProvider?.GetService(typeof(ITracer)) as ITracer;
     }
 
     /// <summary>释放资源</summary>
@@ -85,7 +85,7 @@ public class DeviceSessionManager : DisposeBase
             // 次选从 DI 容器解析缓存提供者
             if (Bus == null)
             {
-                var cacheProvider = _provider.GetService(typeof(ICacheProvider)) as ICacheProvider;
+                var cacheProvider = _provider?.GetService(typeof(ICacheProvider)) as ICacheProvider;
                 if (cacheProvider != null)
                     Bus = cacheProvider.CreateEventBus<String>(Topic, ClientId);
             }
@@ -94,7 +94,7 @@ public class DeviceSessionManager : DisposeBase
 
             EventBusExtensions.Subscribe(Bus, OnMessage);
 
-            WriteLog("Init Topic={0} Bus={1}", Topic, Bus.GetType().Name);
+            WriteLog("Initialized command bus Topic={0} Bus={1}", Topic, Bus.GetType().Name);
         }
     }
     #endregion
@@ -106,7 +106,7 @@ public class DeviceSessionManager : DisposeBase
     public void Register(String key, Object session)
     {
         _sessions[key] = session;
-        WriteLog("Register {0}", key);
+        WriteLog("Register device session {0}", key);
     }
 
     /// <summary>注销设备会话</summary>
@@ -115,7 +115,7 @@ public class DeviceSessionManager : DisposeBase
     {
         if (_sessions.TryRemove(key, out _))
         {
-            WriteLog("Unregister {0}", key);
+            WriteLog("Unregister device session {0}", key);
         }
     }
 
@@ -151,19 +151,19 @@ public class DeviceSessionManager : DisposeBase
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
             session.SendJT(avtype, dataType, payload);
-            WriteLog("Publish 本地发送 key={0} type={1}", key, dataType);
+            WriteLog("Publish sent locally key={0} type={1}", key, dataType);
             return true;
         }
 
         // 没有本地会话，广播到集群
         if (Bus != null)
         {
-            var hex = payload?.GetSpan().ToArray();
+            var hex = payload?.ToArray().ToHex() ?? "";
             var command = $"{avtype}|{(Int32)dataType}|{hex}";
             var message = $"{key}#{command}";
 
             Bus.PublishAsync(message, null, default);
-            WriteLog("Publish 广播 key={0} message={1}", key, message);
+            WriteLog("Publish broadcast key={0} message={1}", key, message);
         }
         return true;
     }
@@ -179,19 +179,19 @@ public class DeviceSessionManager : DisposeBase
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
             session.SendJT(avtype, dataType, payload);
-            WriteLog("PublishAsync 本地发送 key={0} type={1}", key, dataType);
+            WriteLog("PublishAsync sent locally key={0} type={1}", key, dataType);
             return true;
         }
 
         // 没有本地会话，广播到集群
         if (Bus != null)
         {
-            var hex = payload?.GetSpan().ToArray();
+            var hex = payload?.ToArray().ToHex() ?? "";
             var command = $"{avtype}|{(Int32)dataType}|{hex}";
             var message = $"{key}#{command}";
 
             await Bus.PublishAsync(message, null, cancellationToken).ConfigureAwait(false);
-            WriteLog("PublishAsync 广播 key={0}", key);
+            WriteLog("PublishAsync broadcast key={0}", key);
         }
         return true;
     }
@@ -226,7 +226,7 @@ public class DeviceSessionManager : DisposeBase
                 data = new ArrayPacket(hex.ToHex());
 
             session.SendJT(avtype, dataType, data);
-            WriteLog("OnMessage 命中本地会话 key={0} type={1}", key, dataType);
+            WriteLog("OnMessage hit local session key={0} type={1}", key, dataType);
         }
 
         return _completedTask;
@@ -236,7 +236,7 @@ public class DeviceSessionManager : DisposeBase
     #region 辅助
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.Info("DeviceSessionManager." + String.Format(format, args));
+        XTrace.Log.InfoPrefixed("DeviceSessionManager", format, args);
     }
     #endregion
 }

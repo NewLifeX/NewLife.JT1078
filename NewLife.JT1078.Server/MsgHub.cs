@@ -29,6 +29,9 @@ public class MsgHub : DisposeBase, IMsgHub
     /// <summary>已连接的订阅者集合</summary>
     private readonly ConcurrentHashSet<IMsgUser> _users = new();
 
+    /// <summary>是否存在拉流订阅者</summary>
+    public Boolean HasUsers => !_users.IsEmpty;
+
     /// <summary>文件缓存流字典</summary>
     private readonly Dictionary<String, MemoryStream> _files = new(StringComparer.OrdinalIgnoreCase);
 
@@ -175,7 +178,7 @@ public class MsgHub : DisposeBase, IMsgHub
     /// <summary>写日志</summary>
     public void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.Info("MsgHub." + format, args);
+        XTrace.Log.InfoPrefixed("MsgHub", format, args);
     }
 
     /// <summary>释放资源</summary>

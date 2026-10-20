@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "设备命令总线未初始化。"
+"Request must not be null.": "请求不可为空。"
+"Command sent.": "命令已发送。"
+"Device is offline; the command has been broadcast to the cluster.": "设备不在线，已广播到集群。"
+"Recording file not found.": "未找到录制文件。"

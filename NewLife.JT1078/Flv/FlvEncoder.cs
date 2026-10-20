@@ -263,7 +263,7 @@ public class FlvEncoder
     /// <returns></returns>
     public Byte[] EncoderAudioTag(JTMessage package, Boolean needAacHeader = false)
     {
-        if (package.DataType != DataTypes.AudioFrame) throw new Exception("Incorrect parameter, package must be audio frame");
+        if (package.DataType != DataTypes.AudioFrame) throw new Exception(L.T("Incorrect parameter, package must be audio frame"));
 
         var flvMessagePackWriter = new FlvMessagePackWriter(new Byte[65536]);
         if (needAacHeader)

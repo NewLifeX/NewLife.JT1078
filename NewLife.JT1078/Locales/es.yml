@@ -1,0 +1,3 @@
+"Incorrect parameter, package must be audio frame": "Parámetro incorrecto, el paquete debe ser un fotograma de audio"
+"The message must be JTMessage.": "El mensaje debe ser de tipo JTMessage."
+"JTMessage.Append need first packet": "JTMessage.Append requiere el primer paquete"

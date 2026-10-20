@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace NewLife.JT1078.Protocols
 {
     /// <summary>JT1078报文消息</summary>
-    public class JTMessage : IMessage, IAccessor
+    public class JTMessage : Message, IAccessor
     {
         #region 属性
         /// <summary>协议版本号</summary>
@@ -75,21 +75,14 @@ namespace NewLife.JT1078.Protocols
         #endregion
 
         #region 接口属性
-        /// <summary>是否响应</summary>
-        /// <remarks>所有终端主发的消息均应要求平台应答</remarks>
-        public Boolean Reply { get; set; }
-
-        /// <summary>是否错误响应</summary>
-        [IgnoreDataMember]
-        Boolean IMessage.Error { get; set; }
-
-        /// <summary>是否单向请求。单向请求无需等待响应</summary>
-        [IgnoreDataMember]
-        Boolean IMessage.OneWay { get; set; }
-
         /// <summary>负载数据</summary>
+        /// <remarks>消息体句柄视图，赋值即转移数据包所有权；置 null 表示放弃持有</remarks>
         [IgnoreDataMember]
-        public IPacket Payload { get; set; }
+        public new IPacket Payload
+        {
+            get => base.Payload;
+            set => SetBody(value);
+        }
         #endregion
 
         #region 读写
@@ -140,7 +133,7 @@ namespace NewLife.JT1078.Protocols
                     //rs = false;
                 }
 
-                Payload = new ArrayPacket(reader.ReadBytes(len));
+                if (len > 0) Payload = new ArrayPacket(reader.ReadBytes(len));
             }
 
             return rs;
@@ -155,6 +148,18 @@ namespace NewLife.JT1078.Protocols
         {
             if (stream == null && context == null) return false;
 
+            WriteHeader(stream, Payload?.Total ?? 0);
+
+            Payload?.CopyTo(stream);
+
+            return true;
+        }
+
+        /// <summary>写入头部。长度字段使用指定负载长度，不写入负载数据</summary>
+        /// <param name="stream">目标数据流</param>
+        /// <param name="payloadLength">负载字节数</param>
+        private void WriteHeader(Stream stream, Int64 payloadLength)
+        {
             var writer = new Binary { Stream = stream, IsLittleEndian = false };
 
             writer.WriteFixedString("01cd", 4);
@@ -166,7 +171,7 @@ namespace NewLife.JT1078.Protocols
             writer.Write(b);
 
             writer.WriteUInt16(Sequence);
-            writer.WriteBCD(SIM, 6);
+            writer.WriteBCD(SIM ?? "", 6);
             writer.Write(Channel);
 
             b = (Byte)(((Byte)DataType << 4) | (Byte)PacketFlag);
@@ -180,11 +185,7 @@ namespace NewLife.JT1078.Protocols
                 writer.WriteUInt16(LastFrameInterval);
             }
 
-            var len = Payload?.Total ?? 0;
-            writer.WriteUInt16((UInt16)len);
-            Payload?.CopyTo(stream);
-
-            return true;
+            writer.WriteUInt16((UInt16)payloadLength);
         }
 
         /// <summary>读取数据包</summary>
@@ -194,25 +195,39 @@ namespace NewLife.JT1078.Protocols
 
         /// <summary>转数据包</summary>
         /// <returns></returns>
-        IPacket IMessage.ToPacket() => ToPacket();
+        public IPacket ToPacket() => ToOwnerPacket();
 
-        /// <summary>转数据包</summary>
-        /// <returns></returns>
-        public IPacket ToPacket()
+        /// <summary>转所有权数据包</summary>
+        /// <returns>拥有句柄的数据包，调用方负责释放</returns>
+        public IOwnerPacket ToOwnerPacket()
         {
             try
             {
                 var ms = new MemoryStream();
-                if (!Write(ms, null)) return null;
+                Write(ms, null);
 
                 ms.Position = 0;
-                return new ArrayPacket(ms);
+                return new OwnerPacket(ms, 0);
             }
             catch (Exception ex)
             {
                 XTrace.WriteException(ex);
                 throw;
             }
+        }
+
+        /// <summary>构建头部数据包。长度字段使用指定负载长度，不包含负载数据</summary>
+        /// <param name="payloadLength">负载字节数</param>
+        /// <returns>头部数据包，调用方负责释放</returns>
+        public IOwnerPacket ToHeaderPacket(Int64 payloadLength)
+        {
+            if (payloadLength is < 0 or > UInt16.MaxValue) throw new ArgumentOutOfRangeException(nameof(payloadLength));
+
+            var ms = new MemoryStream();
+            WriteHeader(ms, payloadLength);
+
+            ms.Position = 0;
+            return new OwnerPacket(ms, 0);
         }
         #endregion
 
@@ -225,10 +240,12 @@ namespace NewLife.JT1078.Protocols
             if (message.PacketFlag == PacketFlags.Alone) return false;
 
             // 只有第一个包能合并其它包
-            if (PacketFlag != PacketFlags.First) throw new Exception("JTMessage.Append need first packet");
+            if (PacketFlag != PacketFlags.First) throw new Exception(L.T("JTMessage.Append need first packet"));
+
+            if (message.Payload == null) return false;
 
             // 放入分包数组，注意要深度拷贝，否则可能存在网络缓冲区冲突，导致数据被修改
-            Payload.Append(message.Payload.Clone());
+            Payload = Payload == null ? message.Payload.Clone() : Payload.Append(message.Payload.Clone());
 
             if (message.PacketFlag == PacketFlags.Last) return true;
 
@@ -237,9 +254,34 @@ namespace NewLife.JT1078.Protocols
         #endregion
 
         #region 辅助
+        /// <summary>克隆消息。复制全部头部字段，负载深拷贝</summary>
+        /// <returns>独立的新消息实例</returns>
+        public JTMessage Clone()
+        {
+            var msg = new JTMessage
+            {
+                Version = Version,
+                Type = Type,
+                Completed = Completed,
+                Sequence = Sequence,
+                SIM = SIM,
+                Channel = Channel,
+                DataType = DataType,
+                PacketFlag = PacketFlag,
+                Timestamp = Timestamp,
+                LastIFrameInterval = LastIFrameInterval,
+                LastFrameInterval = LastFrameInterval,
+                Kind = Kind,
+            };
+
+            if (Payload != null) msg.Payload = Payload.Clone();
+
+            return msg;
+        }
+
         /// <summary>创建响应</summary>
         /// <returns></returns>
-        public IMessage CreateReply() => new JTMessage { Reply = true, Version = Version, Type = Type, SIM = SIM };
+        public override IMessage CreateReply() => new JTMessage { Reply = true, Version = Version, Type = Type, SIM = SIM, Channel = Channel };
 
         /// <summary>获取数据包长度</summary>
         /// <param name="pk"></param>
@@ -290,9 +332,6 @@ namespace NewLife.JT1078.Protocols
         }
 
         public String GetKey() => $"{SIM}_{Channel}";
-
-        /// <summary>释放资源</summary>
-        public void Dispose() { }
 
         /// <summary>已重写。返回友好文本</summary>
         /// <returns></returns>

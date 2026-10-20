@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>NewLife.JT1078</RootNamespace>
     <AssemblyTitle>JT1078核心协议</AssemblyTitle>
     <Description>JT/T 1078 视频通讯协议核心实现，包括RTP报文解析、音视频编解码、H.264解析</Description>
@@ -21,8 +21,13 @@
     <SignAssembly>False</SignAssembly>
     <!--<AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>-->
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;NU5104</NoWarn>
     <WarningsAsErrors>CA2007</WarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- net8.0+ 启用 AOT/裁剪分析器：0 告警作为构建期硬约束，与 AOT 支持基线一致 -->
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -33,25 +38,35 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;1078;GB1078;音视频;视频通讯;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>v1.0 正式版：RTP协议解析、G711/ADPCM编解码、H.264解析、FLV/fMP4转封装、集群命令下发总线</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0 正式版：RTP协议解析、G711/ADPCM编解码、H.264解析、FLV/fMP4转封装、集群命令下发总线；支持 AOT 与多语言</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
-    <PackageReference Include="NewLife.Core" Version="11.17.2026.713-beta0213" />
-    <PackageReference Include="NewLife.Audio" Version="1.1.2026.713-beta0641" />
-    <PackageReference Include="NewLife.Video" Version="1.1.2026.713-beta0750" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1019-beta1502" />
+    <PackageReference Include="NewLife.Audio" Version="1.2.2026.1019-beta1253" />
+    <PackageReference Include="NewLife.Video" Version="1.2.2026.1019-beta1207" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <None Include="..\Readme.MD" Pack="True" PackagePath="\" />
+    <None Include="..\README.md" Pack="True" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- 反射序列化的模型成员在裁剪后必须保留；以 ILLink.Descriptors.xml 嵌入资源随程序集分发，使用方裁剪器自动应用 -->
+  <ItemGroup>
+    <EmbeddedResource Include="ILLink.Descriptors.xml">
+      <LogicalName>ILLink.Descriptors.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

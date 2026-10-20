@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "コマンドバスが初期化されていません。"
+"Request must not be null.": "リクエストは null にできません。"
+"Command sent.": "コマンドを送信しました。"
+"Device is offline; the command has been broadcast to the cluster.": "デバイスはオフラインです。コマンドはクラスターにブロードキャストされました。"
+"Recording file not found.": "録画ファイルが見つかりません。"

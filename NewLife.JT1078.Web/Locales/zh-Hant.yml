@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "裝置命令匯流排未初始化。"
+"Request must not be null.": "請求不可為空。"
+"Command sent.": "命令已傳送。"
+"Device is offline; the command has been broadcast to the cluster.": "裝置不在線，已廣播到叢集。"
+"Recording file not found.": "找不到錄影檔案。"

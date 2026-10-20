@@ -31,10 +31,10 @@ public class CommandController : ControllerBase
     [HttpPost("Send")]
     public IActionResult Send([FromBody] CommandRequest request)
     {
-        if (request == null) return BadRequest("请求不可为空");
+        if (request == null) return BadRequest(L.T("Request must not be null."));
 
         if (DeviceManager == null)
-            throw new InvalidOperationException("设备命令总线未初始化");
+            throw new InvalidOperationException(L.T("Device command bus is not initialized."));
 
         // 构造 JT1078 RTP 报文
         var data = request.Data?.ToHex();
@@ -47,17 +47,17 @@ public class CommandController : ControllerBase
             payload
         );
 
-        return Ok(new { success = result, message = result ? "命令已发送" : "设备不在线，已广播到集群" });
+        return Ok(new { success = result, message = result ? L.T("Command sent.") : L.T("Device is offline; the command has been broadcast to the cluster.") });
     }
 
     /// <summary>向终端设备发送下行信令（异步）</summary>
     [HttpPost("SendAsync")]
     public async Task<IActionResult> SendAsync([FromBody] CommandRequest request, CancellationToken cancellationToken)
     {
-        if (request == null) return BadRequest("请求不可为空");
+        if (request == null) return BadRequest(L.T("Request must not be null."));
 
         if (DeviceManager == null)
-            throw new InvalidOperationException("设备命令总线未初始化");
+            throw new InvalidOperationException(L.T("Device command bus is not initialized."));
 
         var data = request.Data?.ToHex();
         var payload = data != null ? (IPacket)new ArrayPacket(data) : null;
@@ -70,7 +70,7 @@ public class CommandController : ControllerBase
             cancellationToken
         ).ConfigureAwait(false);
 
-        return Ok(new { success = result, message = result ? "命令已发送" : "设备不在线，已广播到集群" });
+        return Ok(new { success = result, message = result ? L.T("Command sent.") : L.T("Device is offline; the command has been broadcast to the cluster.") });
     }
 
     /// <summary>列出本地已连接的设备</summary>
@@ -113,3 +113,5 @@ public class CommandRequest
     /// <summary>负载数据（十六进制字符串）</summary>
     public String Data { get; set; }
 }
+
+

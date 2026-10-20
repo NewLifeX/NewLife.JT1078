@@ -76,7 +76,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
         // 启动接收线程
         System.Threading.ThreadPool.QueueUserWorkItem(_ => ReceiveLoop());
 
-        WriteLog("UDP Server started on port {0}", port);
+        WriteLog("UDP server started on port {0}", port);
     }
 
     /// <summary>停止 UDP 服务</summary>
@@ -93,7 +93,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
         }
         catch { }
 
-        WriteLog("UDP Server stopped");
+        WriteLog("UDP server stopped");
     }
 
     /// <summary>接收循环</summary>
@@ -170,7 +170,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
     #region 日志
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.Info("{0}.{1}", Name, String.Format(format, args));
+        XTrace.Log.InfoPrefixed(Name, format, args);
     }
     #endregion
 }

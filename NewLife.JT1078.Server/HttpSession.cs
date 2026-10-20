@@ -101,7 +101,7 @@ public class HttpSession : DisposeBase, IMsgUser
     /// <summary>写日志</summary>
     public void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.Info("HttpSession." + format, args);
+        XTrace.Log.InfoPrefixed("HttpSession", format, args);
     }
 
     /// <summary>释放资源</summary>

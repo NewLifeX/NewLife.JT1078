@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "Шина команд устройств не инициализирована."
+"Request must not be null.": "Запрос не может быть пустым."
+"Command sent.": "Команда отправлена."
+"Device is offline; the command has been broadcast to the cluster.": "Устройство не в сети; команда передана в кластер."
+"Recording file not found.": "Файл записи не найден."

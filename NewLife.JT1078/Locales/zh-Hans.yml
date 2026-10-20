@@ -1,0 +1,3 @@
+"Incorrect parameter, package must be audio frame": "参数不正确，数据包必须是音频帧"
+"The message must be JTMessage.": "消息必须是 JTMessage 类型。"
+"JTMessage.Append need first packet": "JTMessage.Append 需要首包"

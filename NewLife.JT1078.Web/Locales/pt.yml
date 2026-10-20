@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "O barramento de comandos de dispositivos não está inicializado."
+"Request must not be null.": "A solicitação não pode ser nula."
+"Command sent.": "Comando enviado."
+"Device is offline; the command has been broadcast to the cluster.": "O dispositivo está offline; o comando foi transmitido ao cluster."
+"Recording file not found.": "Arquivo de gravação não encontrado."

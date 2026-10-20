@@ -53,7 +53,7 @@ public class HlsHandler : IMsgHandler
         }
         catch (Exception ex)
         {
-            WriteLog("EncodeAsync 错误: {0}", ex.Message);
+            WriteLog("EncodeAsync error: {0}", ex.Message);
         }
 
         return Task.FromResult(users.Length);
@@ -222,7 +222,7 @@ public class HlsHandler : IMsgHandler
         {
             var duration = (DateTime.Now - _segmentStart).TotalSeconds;
             SegmentCache.AddSegment(key, data, duration);
-            WriteLog("HLS 段完成 seq={0} size={1}KB duration={2:F2}s",
+            WriteLog("HLS segment completed seq={0} size={1}KB duration={2:F2}s",
                 SegmentCache.GetCurrentSequence(key), data.Length / 1024, duration);
         }
 
@@ -244,7 +244,7 @@ public class HlsHandler : IMsgHandler
     #region 辅助
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.Info("HlsHandler." + String.Format(format, args));
+        XTrace.Log.InfoPrefixed("HlsHandler", format, args);
     }
     #endregion
 }

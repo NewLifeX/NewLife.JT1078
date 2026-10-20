@@ -28,6 +28,9 @@ public class JT1078Session : NetSession<JT1078Server>
     /// <summary>设备标识。SIM+Channel 构成的唯一键</summary>
     public String DeviceKey { get; set; }
 
+    /// <summary>终端 SIM 卡号。由上行报文自动记录</summary>
+    public String SIM { get; set; }
+
     /// <summary>接收到 RTP 报文时触发</summary>
     public event EventHandler<JTMessage> OnReceiveMessage;
     #endregion
@@ -54,6 +57,18 @@ public class JT1078Session : NetSession<JT1078Server>
         LastActive = DateTime.Now;
 
         var rawMsg = e.Message as JTMessage;
+        if (rawMsg != null && !rawMsg.SIM.IsNullOrEmpty())
+        {
+            SIM = rawMsg.SIM;
+
+            var key = rawMsg.GetKey();
+            if (DeviceKey != key)
+            {
+                DeviceKey = key;
+                Host?.DeviceManager?.Register(DeviceKey, this);
+            }
+        }
+
         var msg = Host?.Merge(this, rawMsg);
         if (msg != null)
         {
@@ -61,7 +76,7 @@ public class JT1078Session : NetSession<JT1078Server>
         }
         else if (rawMsg == null)
         {
-            WriteLog("NoMessage {0}", e.Packet);
+            WriteLog("No message object in received data {0}", e.Packet);
         }
 
         base.OnReceive(e);
@@ -70,7 +85,7 @@ public class JT1078Session : NetSession<JT1078Server>
         var exp = (Int32)(DateTime.Now - _lastPush).TotalSeconds;
         if (!Disposed && exp > IdleTime)
         {
-            WriteLog("当前通道无人订阅超时（{0}>{1}秒），准备关闭", exp, IdleTime);
+            WriteLog("No subscriber for the channel for {0}>{1}s, closing", exp, IdleTime);
             Dispose();
         }
     }
@@ -87,8 +102,26 @@ public class JT1078Session : NetSession<JT1078Server>
             var hub = MsgHubRegistry.GetOrAdd(msg.SIM, msg.Channel);
             if (hub.Device == null) hub.Device = this;
 
-            // 异步分发，不阻塞接收线程
-            _ = hub.ProduceAsync(msg);
+            // 协议模式下消息在处理器返回后即收尾，异步分发前先物化负载
+            if (hub.HasUsers) _ = DispatchAsync(hub, msg);
+        }
+    }
+
+    /// <summary>异步分发消息，完成后释放克隆负载</summary>
+    private static async Task DispatchAsync(MsgHub hub, JTMessage msg)
+    {
+        var copy = msg.Clone();
+        try
+        {
+            await hub.ProduceAsync(copy).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
+        finally
+        {
+            copy.TryDispose();
         }
     }
 
@@ -105,6 +138,7 @@ public class JT1078Session : NetSession<JT1078Server>
             Type = avtype,
             Completed = true,
             Sequence = (UInt16)Interlocked.Increment(ref _gid),
+            SIM = SIM,
             Channel = 0,
             DataType = dataType,
             PacketFlag = PacketFlags.Alone,

@@ -1,0 +1,5 @@
+"Device command bus is not initialized.": "ناقل أوامر الأجهزة غير مهيأ."
+"Request must not be null.": "لا يمكن أن يكون الطلب فارغًا."
+"Command sent.": "تم إرسال الأمر."
+"Device is offline; the command has been broadcast to the cluster.": "الجهاز غير متصل؛ تم بث الأمر إلى العنقود."
+"Recording file not found.": "لم يتم العثور على ملف التسجيل."

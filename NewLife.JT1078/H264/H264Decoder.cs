@@ -218,8 +218,8 @@ namespace NewLife.JT1078.H264
 
         /// <summary>
         /// Expunge any "Emulation Prevention" bytes from a "Raw Byte Sequence Payload"
-        /// <see cref="https://blog.csdn.net/u011399342/article/details/80472084"/>
-        /// ��ֹ��������0x03
+        /// <see href="https://blog.csdn.net/u011399342/article/details/80472084"/>
+        /// 剔除用于防止竞争字节误判的0x03填充
         /// </summary>
         /// <param name="srcBuffer"></param>
         /// <returns></returns>

@@ -1,16 +1,16 @@
 using System.Net.Sockets;
 using NewLife.Data;
 using NewLife.JT1078.Protocols;
-using NewLife.Messaging;
 
 namespace NewLife.JT1078.Client.Services;
 
-/// <summary>TCP 客户端服务。直连 JT1078 TCP 端口，使用 PacketCodec 粘包解码</summary>
+/// <summary>TCP 客户端服务。直连 JT1078 TCP 端口，使用 JTCodec 粘包解码</summary>
 public class TcpClientService : IDisposable
 {
     private TcpClient? _tcpClient;
     private NetworkStream? _stream;
-    private PacketCodec? _codec;
+    private readonly JTCodec _codec = new();
+    private readonly MemoryStream _cache = new();
     private CancellationTokenSource? _cts;
     private Task? _receiveTask;
 
@@ -36,12 +36,6 @@ public class TcpClientService : IDisposable
         await _tcpClient.ConnectAsync(host, port);
         _stream = _tcpClient.GetStream();
 
-        _codec = new PacketCodec
-        {
-            MaxCache = 1024,
-            GetLength2 = JTMessage.GetLength2,
-        };
-
         OnConnectionChanged?.Invoke(true);
 
         _receiveTask = ReceiveLoopAsync(_cts.Token);
@@ -66,7 +60,7 @@ public class TcpClientService : IDisposable
         _tcpClient?.Dispose();
         _tcpClient = null;
 
-        _codec = null;
+        _cache.SetLength(0);
 
         _cts?.Dispose();
         _cts = null;
@@ -108,26 +102,9 @@ public class TcpClientService : IDisposable
                 var bytesRead = await _stream!.ReadAsync(buffer, cancellationToken);
                 if (bytesRead == 0) break; // 连接关闭
 
-                // 使用 PacketCodec 解析粘包
-                var data = new Byte[bytesRead];
-                Array.Copy(buffer, data, bytesRead);
-                var packet = new ArrayPacket(data);
-
-                if (_codec != null)
-                {
-                    var packets = _codec.Parse(packet);
-                    if (packets != null)
-                    {
-                        foreach (var pk in packets)
-                        {
-                            var msg = new JTMessage();
-                            if (msg.Read(pk))
-                            {
-                                OnMessageReceived?.Invoke(msg);
-                            }
-                        }
-                    }
-                }
+                // 追加到缓存，按 JT1078 帧格式循环解包
+                _cache.Write(buffer, 0, bytesRead);
+                DecodeCache();
             }
         }
         catch (OperationCanceledException) { }
@@ -141,6 +118,40 @@ public class TcpClientService : IDisposable
         }
     }
 
+    /// <summary>从缓存中循环解包完整帧并触发消息事件</summary>
+    private void DecodeCache()
+    {
+        while (_cache.Length > 0)
+        {
+            if (!_cache.TryGetBuffer(out var seg)) return;
+
+            var data = seg.AsMemory(0, (Int32)_cache.Length);
+            var rs = _codec.TryParse(new System.Buffers.ReadOnlySequence<Byte>(data));
+            if (rs == null) return;
+
+            var result = rs.Value;
+            if (result.Invalid)
+            {
+                _cache.SetLength(0);
+                OnError?.Invoke(new InvalidDataException("Invalid JT1078 frame."));
+                return;
+            }
+
+            var total = result.HeaderSize + (Int32)result.BodyLength;
+            if (_cache.Length < total) return;
+
+            var frame = new Byte[total];
+            Buffer.BlockCopy(seg.Array!, seg.Offset, frame, 0, total);
+
+            var remain = (Int32)_cache.Length - total;
+            if (remain > 0) Buffer.BlockCopy(seg.Array!, seg.Offset + total, seg.Array!, seg.Offset, remain);
+            _cache.SetLength(remain);
+
+            var msg = new JTMessage();
+            if (msg.Read(new ArrayPacket(frame))) OnMessageReceived?.Invoke(msg);
+        }
+    }
+
     /// <summary>释放资源</summary>
     public void Dispose()
     {
@@ -148,5 +159,6 @@ public class TcpClientService : IDisposable
         _stream?.Dispose();
         _tcpClient?.Dispose();
         _cts?.Dispose();
+        _cache.Dispose();
     }
 }

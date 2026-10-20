@@ -1,90 +1,105 @@
-﻿using NewLife;
+﻿using System.Buffers;
 using NewLife.Data;
 using NewLife.Messaging;
-using NewLife.Model;
-using NewLife.Net;
 
 namespace NewLife.JT1078.Protocols
 {
-    /// <summary>JT808网络封包</summary>
-    public class JTCodec : Handler
+    /// <summary>JT1078帧编解码器</summary>
+    /// <remarks>
+    /// JT/T 1078 RTP 报文帧格式：4字节魔数 01cd + 固定头 + 2字节负载长度 + 负载。
+    /// 无状态，可跨连接共享；由 <see cref="NewLife.Net.NetServer.Protocol"/> 启用协议模式后自动定界。
+    /// </remarks>
+    public class JTCodec : IMessageCodec
     {
-        const String CodecName = nameof(JTCodec);
-        private Int32 _gid;
+        #region 属性
+        /// <summary>最大负载长度。协议长度字段为2字节</summary>
+        public Int32 MaxBodyLength { get; set; } = UInt16.MaxValue;
+        #endregion
 
-        /// <summary>写入数据</summary>
-        /// <param name="context"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public override Object Write(IHandlerContext context, Object message)
+        #region 解析
+        /// <summary>定界并构造消息</summary>
+        /// <param name="buffer">帧首窗口（只读序列，可跨段）</param>
+        /// <returns>解析结果；头部数据不足时返回 null</returns>
+        public ParseResult? TryParse(ReadOnlySequence<Byte> buffer)
         {
-            if (message is JTMessage msg)
-            {
-                if (msg.Sequence == 0) msg.Sequence = (Byte)Interlocked.Increment(ref _gid);
+            // 固定头16字节，先探测数据类型以确定完整头长
+            if (buffer.Length < 16) return null;
 
-                message = msg.ToPacket();
+            Span<Byte> head = stackalloc Byte[30];
+            if (!TryCopy(buffer, head[..16])) return null;
+
+            if (head[0] != (Byte)'0' || head[1] != (Byte)'1' || head[2] != (Byte)'c' || head[3] != (Byte)'d')
+                return new ParseResult { Invalid = true };
+
+            var dataType = (DataTypes)(head[15] >> 4);
+            var headerSize = 16;
+            if (dataType != DataTypes.Transparent) headerSize += 8;
+            if (dataType <= DataTypes.VideoBFrame) headerSize += 4;
+            headerSize += 2;
+
+            if (buffer.Length < headerSize) return null;
+            if (!TryCopy(buffer, head[..headerSize])) return null;
+
+            var bodyLength = (head[headerSize - 2] << 8) | head[headerSize - 1];
+            if (bodyLength > MaxBodyLength) return new ParseResult { Invalid = true };
+
+            var msg = new JTMessage();
+            if (!msg.Read(new ArrayPacket(head[..headerSize].ToArray())))
+            {
+                msg.TryDispose();
+                return new ParseResult { Invalid = true };
             }
 
-            return base.Write(context, message);
+            return new ParseResult { Message = msg, HeaderSize = headerSize, BodyLength = bodyLength };
         }
 
-        /// <summary>读取数据</summary>
-        /// <param name="context"></param>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        public override Object Read(IHandlerContext context, Object message)
+        /// <summary>从只读序列拷贝指定字节数到目标缓冲。跨段顺序读取，不物化整帧</summary>
+        /// <param name="buffer">只读序列</param>
+        /// <param name="dest">目标缓冲</param>
+        /// <returns>序列长度不足时返回 false</returns>
+        private static Boolean TryCopy(in ReadOnlySequence<Byte> buffer, Span<Byte> dest)
         {
-            if (message is not IPacket pk) return base.Read(context, message);
+            if (buffer.Length < dest.Length) return false;
 
-            // 解码得到多个消息
-            var list = Decode(context, pk);
-            if (list == null) return null;
-
-            foreach (var msg in list)
-                // 匹配输入回调，让上层事件收到分包信息。
-                // 这里很可能处于网络IO线程，阻塞了下一个Tcp包的接收
-                base.Read(context, msg);
-
-            return null;
-        }
-
-        /// <summary>连接关闭时，清空粘包编码器</summary>
-        /// <param name="context"></param>
-        /// <param name="reason"></param>
-        /// <returns></returns>
-        public override Boolean Close(IHandlerContext context, String reason)
-        {
-            if (context.Owner is IExtend ss) ss[CodecName] = null;
-
-            return base.Close(context, reason);
-        }
-
-        #region 粘包处理
-        /// <summary>解码</summary>
-        /// <param name="context"></param>
-        /// <param name="pk">包</param>
-        /// <returns></returns>
-        protected IList<JTMessage> Decode(IHandlerContext context, IPacket pk)
-        {
-            var ss = context.Owner as IExtend;
-            if (ss[CodecName] is not PacketCodec pc)
-                ss[CodecName] = pc = new PacketCodec
-                {
-                    MaxCache = 1024,
-                    GetLength2 = JTMessage.GetLength2,
-                    Tracer = (context.Owner as ISocket)?.Tracer
-                };
-
-            var pks = pc.Parse(pk);
-            var list = pks.Select(e =>
+            var pos = buffer.Start;
+            var filled = 0;
+            while (filled < dest.Length)
             {
-                var msg = new JTMessage();
-                if (!msg.Read(e)) return null;
+                if (!buffer.TryGet(ref pos, out var mem, advance: false)) return false;
 
-                return msg;
-            }).ToList();
+                var count = Math.Min(mem.Length, dest.Length - filled);
+                mem.Span.Slice(0, count).CopyTo(dest.Slice(filled));
 
-            return list;
+                filled += count;
+                pos = buffer.GetPosition(count, pos);
+            }
+
+            return true;
+        }
+        #endregion
+
+        #region 构建
+        /// <summary>整帧构建（头 + 内存体）</summary>
+        /// <param name="message">消息（体须为内存模式）</param>
+        /// <returns>整帧数据包</returns>
+        /// <exception cref="ArgumentException">消息类型不支持</exception>
+        public IOwnerPacket Build(IMessage message)
+        {
+            if (message is not JTMessage msg) throw new ArgumentException(L.T("The message must be JTMessage."), nameof(message));
+
+            return (IOwnerPacket)msg.ToOwnerPacket();
+        }
+
+        /// <summary>仅构建头部，声明消息体长度</summary>
+        /// <param name="message">消息（提供头部字段）</param>
+        /// <param name="bodyLength">消息体字节数</param>
+        /// <returns>头部数据包</returns>
+        /// <exception cref="ArgumentException">消息类型不支持</exception>
+        public IOwnerPacket BuildHeader(IMessage message, Int64 bodyLength)
+        {
+            if (message is not JTMessage msg) throw new ArgumentException(L.T("The message must be JTMessage."), nameof(message));
+
+            return (IOwnerPacket)msg.ToHeaderPacket(bodyLength);
         }
         #endregion
     }

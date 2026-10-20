@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NewLife.JT1078.Server.Hls;
@@ -50,7 +51,7 @@ public static class JT1078GatewayExtensions
     }
 
     /// <summary>启用 HTTP 服务（自定义授权）</summary>
-    public static IJT1078GatewayBuilder AddHttp<TAuthorization>(this IJT1078GatewayBuilder builder)
+    public static IJT1078GatewayBuilder AddHttp<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TAuthorization>(this IJT1078GatewayBuilder builder)
         where TAuthorization : class, IJT1078Authorization
     {
         builder.Services.Replace(ServiceDescriptor.Singleton<IJT1078Authorization, TAuthorization>());
@@ -58,7 +59,7 @@ public static class JT1078GatewayExtensions
     }
 
     /// <summary>设置自定义授权实现</summary>
-    public static IJT1078GatewayBuilder SetAuthorization<TAuthorization>(this IJT1078GatewayBuilder builder)
+    public static IJT1078GatewayBuilder SetAuthorization<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TAuthorization>(this IJT1078GatewayBuilder builder)
         where TAuthorization : class, IJT1078Authorization
     {
         builder.Services.Replace(ServiceDescriptor.Singleton<IJT1078Authorization, TAuthorization>());

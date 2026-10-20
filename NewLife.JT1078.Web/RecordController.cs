@@ -66,7 +66,7 @@ public class RecordController : ControllerBase
         if (data == null || data.Length == 0)
         {
             response.StatusCode = 404;
-            await response.WriteAsync("未找到录制文件");
+            await response.WriteAsync(L.T("Recording file not found."));
             return;
         }
 
@@ -93,3 +93,4 @@ public class RecordModel
     /// <summary>设备认证 Token</summary>
     public String? Token { get; set; }
 }
+
