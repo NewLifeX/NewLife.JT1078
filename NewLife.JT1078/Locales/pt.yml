@@ -1,3 +1,4 @@
 "Incorrect parameter, package must be audio frame": "Parâmetro incorreto, o pacote deve ser um quadro de áudio"
 "The message must be JTMessage.": "A mensagem deve ser do tipo JTMessage."
 "JTMessage.Append need first packet": "JTMessage.Append requer o primeiro pacote"
+"The message body is streaming and cannot be built as a whole frame.": "O corpo da mensagem está em streaming e não pode ser construído como um quadro completo."

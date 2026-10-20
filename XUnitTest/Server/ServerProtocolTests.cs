@@ -77,6 +77,46 @@ public class ServerProtocolTests
         throw new TimeoutException("No complete frame was received.");
     }
 
+    [Fact(DisplayName = "分包合并：无 SIM 直接按独立包处理")]
+    public void Merge_NoSim()
+    {
+        using var server = new JT1078Server { Cache = new MemoryCache() };
+
+        var msg = new JTMessage
+        {
+            PacketFlag = PacketFlags.First,
+            Payload = new ArrayPacket(new Byte[] { 1, 2, 3 }),
+        };
+
+        var session = new JT1078Session();
+        Assert.Same(msg, server.Merge(session, msg));
+    }
+
+    [Fact(DisplayName = "分包合并：首包+中间包+末包")]
+    public void Merge_Fragments()
+    {
+        using var server = new JT1078Server { Cache = new MemoryCache() };
+        var session = new JT1078Session();
+
+        JTMessage Make(PacketFlags flag, Byte[] payload) => new()
+        {
+            Version = 129,
+            Type = AVTypes.H264,
+            SIM = "138001380000",
+            Channel = 1,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = flag,
+            Payload = new ArrayPacket(payload),
+        };
+
+        Assert.Null(server.Merge(session, Make(PacketFlags.First, [1, 2])));
+        Assert.Null(server.Merge(session, Make(PacketFlags.Middle, [3, 4])));
+
+        var merged = server.Merge(session, Make(PacketFlags.Last, [5, 6]));
+        Assert.NotNull(merged);
+        Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, merged!.Payload!.ToArray());
+    }
+
     [Fact(DisplayName = "服务端协议模式：粘包拆分为多条消息")]
     public async Task Server_StickyFrames()
     {

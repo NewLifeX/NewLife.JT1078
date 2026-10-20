@@ -1,3 +1,4 @@
 "Incorrect parameter, package must be audio frame": "Недопустимый параметр: пакет должен быть аудиокадром"
 "The message must be JTMessage.": "Сообщение должно иметь тип JTMessage."
 "JTMessage.Append need first packet": "Для JTMessage.Append требуется первый пакет"
+"The message body is streaming and cannot be built as a whole frame.": "Тело сообщения передаётся потоком и не может быть собрано в целый кадр."

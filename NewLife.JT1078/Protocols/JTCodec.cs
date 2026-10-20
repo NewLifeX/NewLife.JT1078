@@ -86,6 +86,8 @@ namespace NewLife.JT1078.Protocols
         public IOwnerPacket Build(IMessage message)
         {
             if (message is not JTMessage msg) throw new ArgumentException(L.T("The message must be JTMessage."), nameof(message));
+            if (msg.Payload == null && msg.Body != null && msg.Body.Remaining > 0)
+                throw new InvalidOperationException(L.T("The message body is streaming and cannot be built as a whole frame."));
 
             return (IOwnerPacket)msg.ToOwnerPacket();
         }

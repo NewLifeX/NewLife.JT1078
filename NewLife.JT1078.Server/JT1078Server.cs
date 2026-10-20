@@ -77,6 +77,9 @@ public class JT1078Server : NetServer<JT1078Session>
     {
         if (msg.PacketFlag == PacketFlags.Alone) return msg;
 
+        // 无 SIM 无法按设备聚合分包，直接按独立包处理
+        if (msg.SIM.IsNullOrEmpty()) return msg;
+
         // 按 SIM+通道+编码类型 作为分包键，跨连接稳定；避免依赖底层 Socket 会话
         var key = $"{msg.SIM}-{msg.Channel}-{msg.Type}";
 

@@ -64,7 +64,9 @@ public class MsgHub : DisposeBase, IMsgHub
         {
             user.Detach(this);
             user.Close(reason);
+            _users.TryRemove(user);
         }
+        Device = null;
 
         foreach (var file in _files.Values)
         {

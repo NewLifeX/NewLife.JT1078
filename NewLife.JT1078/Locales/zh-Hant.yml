@@ -1,3 +1,4 @@
 "Incorrect parameter, package must be audio frame": "參數不正確，資料包必須是音訊幀"
 "The message must be JTMessage.": "訊息必須是 JTMessage 類型。"
 "JTMessage.Append need first packet": "JTMessage.Append 需要首包"
+"The message body is streaming and cannot be built as a whole frame.": "訊息體為串流讀取，無法建構整幀。"

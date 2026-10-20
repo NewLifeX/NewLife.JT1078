@@ -1,3 +1,4 @@
 "Incorrect parameter, package must be audio frame": "معامل غير صالح، يجب أن تكون الحزمة إطار صوت"
 "The message must be JTMessage.": "يجب أن تكون الرسالة من النوع JTMessage."
 "JTMessage.Append need first packet": "يتطلب JTMessage.Append الحزمة الأولى"
+"The message body is streaming and cannot be built as a whole frame.": "جسم الرسالة متدفق ولا يمكن بناء إطار كامل منه."

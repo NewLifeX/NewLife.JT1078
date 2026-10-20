@@ -1,3 +1,4 @@
 "Incorrect parameter, package must be audio frame": "잘못된 매개 변수입니다. 패킷은 오디오 프레임이어야 합니다."
 "The message must be JTMessage.": "메시지는 JTMessage 형식이어야 합니다."
 "JTMessage.Append need first packet": "JTMessage.Append에는 첫 번째 패킷이 필요합니다."
+"The message body is streaming and cannot be built as a whole frame.": "메시지 본문이 스트리밍 상태여서 전체 프레임을 만들 수 없습니다."
