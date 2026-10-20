@@ -24,6 +24,7 @@ jobs:
     - name: Build
       run: |
         dotnet pack -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
+        dotnet pack -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
