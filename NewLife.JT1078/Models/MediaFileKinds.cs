@@ -1,18 +1,17 @@
-﻿namespace NewLife.JT1078.Models
+﻿namespace NewLife.JT1078.Models;
+
+/// <summary>音视频资源类型</summary>
+public enum MediaFileKinds : Byte
 {
-    /// <summary>音视频资源类型</summary>
-    public enum MediaFileKinds : Byte
-    {
-        /// <summary>音视频</summary>
-        AudioVideo = 0,
+    /// <summary>音视频</summary>
+    AudioVideo = 0,
 
-        /// <summary>音频</summary>
-        Audio = 1,
+    /// <summary>音频</summary>
+    Audio = 1,
 
-        /// <summary>视频</summary>
-        Video = 2,
+    /// <summary>视频</summary>
+    Video = 2,
 
-        /// <summary>视频或音视频</summary>
-        VideoOrAudioVideo = 3,
-    }
+    /// <summary>视频或音视频</summary>
+    VideoOrAudioVideo = 3,
 }
