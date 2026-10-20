@@ -191,9 +191,17 @@ public class DeviceSessionManager : DisposeBase
         // 先尝试本地发送
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
-            session.SendJT(avtype, dataType, payload, channel);
-            WriteLog("Publish sent locally key={0} type={1}", key, dataType);
-            return true;
+            try
+            {
+                session.SendJT(avtype, dataType, payload, channel);
+                WriteLog("Publish sent locally key={0} type={1}", key, dataType);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // 会话可能已断开，记录后继续尝试集群广播
+                XTrace.WriteException(ex);
+            }
         }
 
         // 没有本地会话，广播到集群
@@ -222,9 +230,17 @@ public class DeviceSessionManager : DisposeBase
         // 先尝试本地发送
         if (_sessions.TryGetValue(key, out var sessionObj) && sessionObj is JT1078Session session)
         {
-            session.SendJT(avtype, dataType, payload, channel);
-            WriteLog("PublishAsync sent locally key={0} type={1}", key, dataType);
-            return true;
+            try
+            {
+                session.SendJT(avtype, dataType, payload, channel);
+                WriteLog("PublishAsync sent locally key={0} type={1}", key, dataType);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // 会话可能已断开，记录后继续尝试集群广播
+                XTrace.WriteException(ex);
+            }
         }
 
         // 没有本地会话，广播到集群

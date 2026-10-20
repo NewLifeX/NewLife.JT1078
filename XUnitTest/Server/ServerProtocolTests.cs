@@ -117,6 +117,61 @@ public class ServerProtocolTests
         Assert.Equal(new Byte[] { 1, 2, 3, 4, 5, 6 }, merged!.Payload!.ToArray());
     }
 
+    private static Int32 GetFreeUdpPort()
+    {
+        using var client = new UdpClient(new IPEndPoint(IPAddress.Loopback, 0));
+        return ((IPEndPoint)client.Client.LocalEndPoint!).Port;
+    }
+
+    [Fact(DisplayName = "UDP 服务端：数据报解析并注册设备")]
+    public async Task UdpServer_ReceiveAndRegister()
+    {
+        var port = GetFreeUdpPort();
+        using var manager = new DeviceSessionManager(null);
+        using var server = new JT1078UdpServer
+        {
+            Setting = new JT1078Setting { UdpPort = port },
+            DeviceManager = manager,
+        };
+        server.Start();
+
+        try
+        {
+            using var client = new UdpClient();
+            var frame = CreateMessage(1, [1, 2, 3], channel: 2).ToPacket().GetSpan().ToArray();
+            await client.SendAsync(frame, new IPEndPoint(IPAddress.Loopback, port));
+
+            var end = DateTime.Now.AddSeconds(5);
+            while (DateTime.Now < end && !manager.Contains("138001380000_2")) await Task.Delay(20);
+
+            Assert.True(manager.Contains("138001380000_2"));
+        }
+        finally
+        {
+            server.Stop();
+        }
+    }
+
+    [Fact(DisplayName = "分包合并：缺少首包时丢弃残缺帧")]
+    public void Merge_OrphanFragment()
+    {
+        using var server = new JT1078Server { Cache = new MemoryCache() };
+        var session = new JT1078Session();
+
+        var msg = new JTMessage
+        {
+            Version = 129,
+            Type = AVTypes.H264,
+            SIM = "138001380000",
+            Channel = 1,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Last,
+            Payload = new ArrayPacket(new Byte[] { 1, 2, 3 }),
+        };
+
+        Assert.Null(server.Merge(session, msg));
+    }
+
     [Fact(DisplayName = "服务端协议模式：粘包拆分为多条消息")]
     public async Task Server_StickyFrames()
     {

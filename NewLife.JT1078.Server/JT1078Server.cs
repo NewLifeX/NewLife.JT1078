@@ -92,7 +92,11 @@ public class JT1078Server : NetServer<JT1078Session>
 
         // 中间包或末包
         var first = Cache.Get<JTMessage>(key);
-        if (first == null) return msg; // 缓存丢失，当作独立包处理
+        if (first == null)
+        {
+            // 缺少首包，丢弃残缺帧，避免向下游输出不完整数据
+            return null;
+        }
 
         first.Append(msg);
 
