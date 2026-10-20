@@ -82,10 +82,10 @@ if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 using NewLife.Audio;
 
 var factory = new AudioCodecFactory();
-// ADPCM -> PCM
+// Device payload -> PCM
 var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
 // PCM -> G.711A
-var g711a = factory.FromPcm(pcmData, NewLife.Audio.AVTypes.G711A, null);
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
 ```
 
 ### Start the streaming server
@@ -112,7 +112,7 @@ builder.Services.AddJT1078Gateway()
 
 ## Native AOT
 
-The core protocol library and the server under default configuration support NativeAOT and trimming. The AOT/trim analyzers are always enabled for net8.0 and later targets with zero IL warnings at build time. The `AotSmoke` project in this repository publishes a native image in CI with `PublishAot=true` and exercises frame codecs, server assembly and localization lookups.
+The core protocol library and the server under default configuration support NativeAOT and trimming. The AOT/trim analyzers are always enabled for net8.0 and later targets with zero IL warnings at build time. The `AotSmoke` project in this repository publishes a native image in CI with `PublishAot=true` and exercises frame codecs, model reflection serialization, DI assembly, server assembly and localization lookups.
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out

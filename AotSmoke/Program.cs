@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
 using NewLife;
 using NewLife.Data;
 using NewLife.JT1078.Models;
@@ -45,6 +46,13 @@ if (!parameter2.Read(ms, null!) || parameter2.Count != 1 || parameter2.Items[0].
 // 服务端装配（不启动监听）：协议编解码器已挂载
 using var server = new JT1078Server { Port = 0 };
 if (server.Protocol is not JTCodec) throw new InvalidOperationException("Server protocol not configured.");
+
+// DI 装配在裁剪后仍可解析服务
+var services = new ServiceCollection();
+services.AddJT1078Gateway();
+using var provider = services.BuildServiceProvider();
+var diServer = provider.GetRequiredService<JT1078Server>();
+if (diServer.Protocol is not JTCodec) throw new InvalidOperationException("DI server protocol not configured.");
 
 Console.WriteLine($"AOT OK: body={rs.Value.BodyLength}, message={text}, model={parameter2.Items.Length}");
 

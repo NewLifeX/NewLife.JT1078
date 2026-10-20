@@ -18,4 +18,8 @@
     <ProjectReference Include="..\NewLife.JT1078.Server\NewLife.JT1078.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+  </ItemGroup>
+
 </Project>

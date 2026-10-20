@@ -82,10 +82,10 @@ if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 using NewLife.Audio;
 
 var factory = new AudioCodecFactory();
-// ADPCM → PCM
+// 设备数据 → PCM
 var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
 // PCM → G.711A
-var g711a = factory.FromPcm(pcmData, NewLife.Audio.AVTypes.G711A, null);
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
 ```
 
 ### 启动流媒体服务器
@@ -112,7 +112,7 @@ builder.Services.AddJT1078Gateway()
 
 ## Native AOT
 
-核心协议库与默认配置下的服务端支持 NativeAOT 与裁剪：net8.0 及以上目标常驻启用 AOT/裁剪分析器，构建期零 IL 告警；仓库内 `AotSmoke` 冒烟工程在 CI 中以 `PublishAot=true` 发布原生镜像并运行协议编解码、服务端装配与多语言查表。
+核心协议库与默认配置下的服务端支持 NativeAOT 与裁剪：net8.0 及以上目标常驻启用 AOT/裁剪分析器，构建期零 IL 告警；仓库内 `AotSmoke` 冒烟工程在 CI 中以 `PublishAot=true` 发布原生镜像并运行协议编解码、模型反射序列化、DI 装配、服务端装配与多语言查表。
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
