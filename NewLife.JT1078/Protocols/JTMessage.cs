@@ -143,7 +143,6 @@ namespace NewLife.JT1078.Protocols
         /// <param name="stream"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public Boolean Write(Stream stream, Object context)
         {
             if (stream == null && context == null) return false;

@@ -93,7 +93,10 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
         {
             _server?.Close();
         }
-        catch { }
+        catch
+        {
+            // 套接字可能已被释放，忽略关闭异常
+        }
 
         WriteLog("UDP server stopped");
     }
