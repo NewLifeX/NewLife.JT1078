@@ -128,6 +128,28 @@ public class H264DecoderTests
         Assert.Equal(100, info.profileIdc);
     }
 
+    [Fact(DisplayName = "H264SpsParser 解析PocType1 SPS")]
+    public void SpsParser_PocType1()
+    {
+        // Baseline 1280x720，pic_order_cnt_type=1，含参考帧周期偏移
+        var sps = new Byte[] { 0x67, 0x42, 0x00, 0x1E, 0xD3, 0x54, 0x02, 0x80, 0x2D, 0xC8 };
+
+        Assert.True(H264SpsParser.TryParse(sps, out var info));
+        Assert.Equal(1280, info.width);
+        Assert.Equal(720, info.height);
+    }
+
+    [Fact(DisplayName = "H264SpsParser 解析带缩放矩阵的SPS")]
+    public void SpsParser_ScalingMatrix()
+    {
+        // High 1280x720，seq_scaling_matrix_present_flag=1，首组缩放列表存在
+        var sps = new Byte[] { 0x67, 0x64, 0x00, 0x1F, 0xAD, 0xFF, 0xFF, 0x80, 0xE8, 0x05, 0x00, 0x5B, 0x90 };
+
+        Assert.True(H264SpsParser.TryParse(sps, out var info));
+        Assert.Equal(1280, info.width);
+        Assert.Equal(720, info.height);
+    }
+
     [Fact(DisplayName = "H264SpsParser 拒绝截断SPS而不崩溃")]
     public void SpsParser_Invalid()
     {
@@ -230,6 +252,38 @@ public class H264DecoderTests
 
         Assert.Single(frame.Nalus);
         Assert.Single(decoder.ParseNALU(msg));
+    }
+
+    [Fact(DisplayName = "ParseNALU 列表重载解析NAL单元")]
+    public void ParseNALU_ListOverload()
+    {
+        var nalData = new Byte[]
+        {
+            0x00, 0x00, 0x01, 0x67,
+            0x42, 0x00, 0x1E, 0xF4, 0x02, 0x80, 0x2D, 0xC8,
+            0x00, 0x00, 0x01, 0x68,
+            0xCE, 0x3C, 0x80,
+            0x00, 0x00, 0x01, 0x65,
+            0x88, 0x84, 0x00, 0x10,
+        };
+        var msg = new JTMessage
+        {
+            SIM = "138001380000",
+            Channel = 1,
+            Type = AVTypes.H264,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Alone,
+            Timestamp = 1000,
+            Payload = new ArrayPacket(nalData),
+        };
+
+        var nalus = new List<H264NALU>();
+        new H264Decoder().ParseNALU(msg, nalus);
+
+        Assert.Equal(3, nalus.Count);
+        Assert.Equal(NalUnitType.SPS, nalus[0].NALUHeader.NalUnitType);
+        Assert.Equal(NalUnitType.PPS, nalus[1].NALUHeader.NalUnitType);
+        Assert.Equal(NalUnitType.IDR, nalus[2].NALUHeader.NalUnitType);
     }
 
     [Fact(DisplayName = "DiscardEmulationPreventionBytes 剔除防竞争字节")]

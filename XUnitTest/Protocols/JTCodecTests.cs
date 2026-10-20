@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+using System.Buffers;
 using NewLife.Data;
 using NewLife.JT1078.Protocols;
 using NewLife.Messaging;
@@ -48,6 +48,27 @@ public class JTCodecTests
             PacketFlag = PacketFlags.Alone,
             Payload = new ArrayPacket(payload),
         };
+    }
+
+    [Fact(DisplayName = "Build 拒绝流式消息体")]
+    public void Build_StreamingBody_Throws()
+    {
+        var msg = new JTMessage
+        {
+            Version = 129,
+            Type = AVTypes.H264,
+            SIM = "138001380000",
+            Channel = 1,
+            DataType = DataTypes.VideoIFrame,
+            PacketFlag = PacketFlags.Alone,
+        };
+
+        using var pipe = new Pipe();
+        pipe.Writer.Append(new ArrayPacket([1, 2, 3]));
+        msg.BindBody(pipe.Reader.Limit(3));
+
+        var codec = new JTCodec();
+        Assert.Throws<InvalidOperationException>(() => codec.Build(msg));
     }
 
     private static Byte[] ToBytes(JTMessage msg) => msg.ToPacket().GetSpan().ToArray();
