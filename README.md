@@ -1,234 +1,278 @@
 # NewLife.JT1078
 
-![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)
-![MIT](https://img.shields.io/badge/license-MIT-green.svg)
-![Test](https://github.com/NewLifeX/NewLife.JT1078/workflows/test/badge.svg)
+![GitHub License](https://img.shields.io/github/license/NewLifeX/NewLife.JT1078?logo=github)
+![Nuget Downloads](https://img.shields.io/nuget/dt/NewLife.JT1078?logo=nuget)
+![Nuget](https://img.shields.io/nuget/v/NewLife.JT1078?logo=nuget)
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/NewLife.JT1078?label=dev%20nuget&logo=nuget)
+[![NativeAOT](https://github.com/NewLifeX/NewLife.JT1078/actions/workflows/aot.yml/badge.svg?branch=master)](https://github.com/NewLifeX/NewLife.JT1078/actions/workflows/aot.yml)
+[![test](https://github.com/NewLifeX/NewLife.JT1078/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/NewLifeX/NewLife.JT1078/actions/workflows/test.yml)
+![TFM](https://img.shields.io/badge/TFM-5%20%28net461%20%E2%86%92%20net10.0%29-512BD4?logo=dotnet)
+![locales](https://img.shields.io/badge/locales-10-2ea44f?logo=dotnet)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 
-JT/T 1078 道路运输车辆卫星定位系统视频通讯协议的 .NET 实现，覆盖协议解析、音视频编解码、FLV/fMP4 转封装、TCP/UDP 服务端、HTTP/WebSocket 直播推送全链路。
+<!-- lang:start -->
+🌐 [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
+<!-- lang:end -->
 
-## 功能特性
+A .NET implementation of the JT/T 1078 video communication protocol for road transport satellite positioning systems. It covers the full pipeline of protocol parsing, audio/video codecs, FLV/fMP4 remuxing, TCP/UDP servers, and HTTP/WebSocket live streaming. NativeAOT and runtime localization are supported.
 
-### 协议层
-- **JT1078 RTP 协议**：完整的 RTP 报文解析与构建，支持 29 种音视频编码类型
-- **TCP 粘包处理**：基于 PacketCodec 的自动分包/合包
-- **RTP 分包合并**：自动缓存并合并 I/P/B 帧的分包
+## Features
 
-### 音视频编解码
-- **音频解码**：G.711A (A-law)、G.711U (μ-law)、IMA-ADPCM，支持海思芯片头剥离
-- **AAC 编码**：基于 FaacEncoder (P/Invoke) 的 AAC 编码
-- **H.264 解析**：NAL 单元分割、SPS/PPS 解析、起始码处理、竞争字节剥离
+### Protocol
+- **JT1078 RTP protocol**: complete RTP message parsing and building with 29 audio/video payload types
+- **Frame framing**: sticky-packet splitting and header-first parsing built on NewLife.Core `IMessageCodec`
+- **RTP fragment merging**: automatic buffering and merging of I/P/B frame fragments
 
-### 容器封装
-- **FLV 转封装**：将 RTP 流实时转换为 HTTP-FLV / WebSocket-FLV，支持 flv.js 播放
-- **fMP4 转封装**：CMAF/fMP4 分段输出，支持 ISO BMFF 核心 Box 类型
+### Audio and video codecs
+- **Audio decoding**: G.711A (A-law), G.711U (μ-law), IMA-ADPCM, with HiSilicon header stripping
+- **AAC encoding**: AAC encoding via FaacEncoder (P/Invoke)
+- **H.264 parsing**: NAL unit splitting, SPS/PPS parsing, start-code handling, emulation-prevention byte removal
 
-### 服务端
-- **TCP 服务**：开箱即用的 JT1078 TCP 服务器，支持端口配置、调试日志
-- **UDP 服务**：支持 JT/T 1078 UDP 传输模式，与 TCP 双栈共存
-- **HTTP/WS 直播**：内置 ASP.NET Core 端点，支持 FLV/fMP4/AAC/PCM/WAV 格式
-- **录像回放**：支持按 SIM/通道/时间范围的历史音视频回放
-- **设备命令**：基于 IEventBus 的集群命令下发总线，支持单机/Redis 集群模式
+### Container remuxing
+- **FLV remuxing**: real-time RTP to HTTP-FLV / WebSocket-FLV for flv.js playback
+- **fMP4 remuxing**: CMAF/fMP4 segment output with core ISO BMFF boxes
 
-### 管理与集成
-- **设备在线状态**：实时跟踪终端连接/断开事件
-- **流媒体授权**：Token 认证保护直播端点
-- **DI 构建器**：`AddJT1078Gateway().AddTcp().AddHttp()` 链式注册
-- **IHostedService**：ASP.NET Core 生命周期自动管理
+### Server
+- **TCP service**: out-of-the-box JT1078 TCP server with port configuration and debug logging
+- **UDP service**: JT/T 1078 UDP transport coexisting with TCP
+- **HTTP/WS live streaming**: built-in ASP.NET Core endpoints for FLV/fMP4/AAC/PCM/WAV
+- **Playback**: historical audio/video playback by SIM, channel and time range
+- **Device commands**: cluster command bus based on IEventBus, standalone or Redis cluster
 
-## 快速开始
+### Management and integration
+- **Device presence**: real-time tracking of terminal connect/disconnect events
+- **Stream authorization**: token authentication protecting live endpoints
+- **DI builder**: `AddJT1078Gateway().AddTcp().AddHttp()` fluent registration
+- **IHostedService**: automatic ASP.NET Core lifecycle management
+- **NativeAOT**: reflection-free protocol and localization tables, native image verified by smoke test
+- **Localization**: English source messages with 10 bundled translations and English fallback
 
-### 安装 NuGet 包
+## Quick Start
+
+### Install NuGet packages
 
 ```bash
-dotnet add package NewLife.JT1078           # 核心协议库
-dotnet add package NewLife.JT1078.Flv       # FLV 转封装
-dotnet add package NewLife.JT1078.FMp4      # fMP4 转封装
-dotnet add package NewLife.JT1078.Server    # TCP 服务端
+dotnet add package NewLife.JT1078           # core protocol library (includes FLV/fMP4 remuxing)
+dotnet add package NewLife.JT1078.Server    # TCP/UDP server + HLS/MP3
 ```
 
-### 解析 RTP 报文
+### Parse an RTP message
 
 ```csharp
+using System.Buffers;
 using NewLife.JT1078.Protocols;
 
-// 从网络流解析
-var msg = new JTMessage();
-msg.Read(stream);
-
-// 检查载荷类型
-if (msg.AVType == AVTypes.H264)
+// Frame framing: a message is produced as soon as the header arrives; the body is bound by the frame layer
+var codec = new JTCodec();
+var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
+if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
-    // 处理 H.264 视频
-    var decoder = new H264Decoder();
-    var frame = decoder.ParseAVFrame(msg);
+    // Inspect the payload type
+    if (msg.Type == AVTypes.H264)
+    {
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
+    }
 }
 ```
 
-### 音频解码
+### Audio decoding
 
 ```csharp
-using NewLife.JT1078.Audio;
+using NewLife.Audio;
 
 var factory = new AudioCodecFactory();
-// ADPCM → PCM
-var pcm = factory.ToPcm(adpcmData, AVTypes.ADPCMA, state);
-// PCM → G.711A
-var g711a = factory.FromPcm(pcmData, AVTypes.G711A, null);
+// ADPCM -> PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM -> G.711A
+var g711a = factory.FromPcm(pcmData, NewLife.Audio.AVTypes.G711A, null);
 ```
 
-### 启动流媒体服务器
+### Start the streaming server
 
 ```csharp
 using NewLife.JT1078.Server;
 
-// 方式一：直接使用
+// Option 1: use directly
 var server = new JT1078Server();
 server.Start();
 
-// 方式二：ASP.NET Core 集成
+// Option 2: ASP.NET Core integration
 builder.Services.AddJT1078Gateway()
        .AddTcp()
        .AddHttp();
 ```
 
-## NuGet 包列表
+## NuGet Packages
 
-| 包名 | 说明 | NuGet |
-|------|------|-------|
-| NewLife.JT1078 | 核心协议 + 编解码 + FLV/fMP4 转封装（Flv/FMp4 已合并入核心） | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
-| NewLife.JT1078.Server | TCP/UDP 服务端 + DI 构建器 + HLS/MP3 编码 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
+| Package | Description | NuGet |
+|---------|-------------|-------|
+| NewLife.JT1078 | Core protocol + codecs + FLV/fMP4 remuxing (Flv/FMp4 merged into the core) | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | TCP/UDP server + DI builder + HLS/MP3 encoding | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
-## 架构
+## Native AOT
+
+The core protocol library and the server under default configuration support NativeAOT and trimming. The AOT/trim analyzers are always enabled for net8.0 and later targets with zero IL warnings at build time. The `AotSmoke` project in this repository publishes a native image in CI with `PublishAot=true` and exercises frame codecs, server assembly and localization lookups.
+
+```bash
+dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
+./out/AotSmoke
+```
+
+> Plugins, dynamic scripting and runtime reflection registration are outside the AOT support boundary (consistent with NewLife.Core).
+
+## Localization
+
+Exceptions and logs share a compile-time generated localization table. It follows `CultureInfo.CurrentUICulture` by default and falls back to English when a translation is missing. No resx or satellite assemblies are involved: a single DLL, natively AOT-safe.
+
+| Setting | Purpose |
+|---|---|
+| `CultureInfo.CurrentUICulture` | Default language source; ASP.NET Core can vary it per request |
+| `Localization.Culture` | Forces the language for exceptions and regular text |
+| `Localization.LogCulture` | Language of developer-facing text (logs, configuration comments) |
+
+```csharp
+// Site-wide Chinese
+Localization.Culture = new CultureInfo("zh-CN");
+
+// Web service honoring Accept-Language per request
+using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
+```
+
+Bundled translations: `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar`. To add a language, map English source strings to translations in `Locales/<culture>.yml`; the source generator validates, compresses and registers the table at build time.
+
+## Build and Test
+
+```bash
+dotnet test -c Release
+```
+
+Tests cover frame codec framing/building, multi-segment sequences, invalid frames, message fragment merging, BCD serialization, audio codecs, H.264 parsing, FLV/fMP4 packaging, server protocol mode and localization tables.
+
+## Architecture
 
 ```
-JT1078 终端设备 (TCP/UDP:1078)
+JT1078 device (TCP/UDP:1078)
     │
     ▼
 NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
-    │  RTP 分包合并
+    │  RTP fragment merging
     ▼
-JTMessage (RTP 报文)
-    ├──► H264Decoder (视频)
-    ├──► AudioCodecFactory (音频)
+JTMessage (RTP message)
+    ├──► H264Decoder (video)
+    ├──► AudioCodecFactory (audio)
     │
-    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV 直播
-    ├──► FMp4Encoder ────────► fMP4 直播
-    ├──► HlsHandler / TSMuxer ──► HLS 直播 (/hls.m3u8)
-    ├──► Mp3Handler ─────────► MP3 音频直播
-    ├──► 音频 Handler ────────► AAC / PCM / WAV 直播
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► MP3 audio
+    ├──► audio handlers ──────► AAC / PCM / WAV
     │
-    ├──► DeviceSessionManager ──► 集群命令广播 (IEventBus)
+    ├──► DeviceSessionManager ──► cluster command broadcast (IEventBus)
     │
     ▼
- 播放器 (flv.js / hls.js)
+Player (flv.js / hls.js)
 ```
 
-## 集群部署
+## Cluster Deployment
 
-服务端支持多实例集群部署，通过事件总线实现设备命令的跨实例转发：
+The server supports multi-instance deployment and forwards device commands across instances through an event bus:
 
 ```csharp
-// 单机模式（默认，内存 EventBus）
+// Standalone (default, in-memory EventBus)
 services.AddJT1078Gateway().AddTcp().AddHttp();
 
-// 集群模式（通过 Redis/Stardust 提供 ICacheProvider）
-// 自动创建 Redis EventBus，命令广播到所有实例
+// Cluster (provide ICacheProvider via Redis/Stardust)
+// A Redis EventBus is created automatically and commands are broadcast to all instances
 ```
 
-REST API：
-- `POST /Command/Send` — 向设备发送信令（同步，自动路由到设备所在服务器）
-- `POST /Command/SendAsync` — 向设备发送信令（异步，CancellationToken 支持）
-- `GET /Command/Devices` — 查询本地已连接的设备列表（含 TCP/UDP 类型）
+REST API:
+- `POST /Command/Send`: send a command to a device synchronously, automatically routed to the instance holding the device
+- `POST /Command/SendAsync`: send a command asynchronously with CancellationToken support
+- `GET /Command/Devices`: list locally connected devices (TCP/UDP)
 
-## 直播端点
+## Live Endpoints
 
-| 端点 | 格式 | 传输 | 播放器 |
-|------|------|------|--------|
+| Endpoint | Format | Transport | Player |
+|----------|--------|-----------|--------|
 | `/live.flv` | FLV | HTTP / WebSocket | flv.js |
-| `/live.mp4` | fMP4 | HTTP / WebSocket | 原生 MSE |
-| `/live.aac` | AAC | HTTP | 原生音频 |
-| `/live.pcm` | PCM | HTTP | 原生音频 |
-| `/live.wav` | WAV | HTTP | 原生音频 |
-| `/live.mp3` | MP3 | HTTP | 原生音频 |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | native MSE |
+| `/live.aac` | AAC | HTTP | native audio |
+| `/live.pcm` | PCM | HTTP | native audio |
+| `/live.wav` | WAV | HTTP | native audio |
+| `/live.mp3` | MP3 | HTTP | native audio |
 | `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
 
-## 协议参考
+## Protocol References
 
-- JT/T 1078-2016《道路运输车辆卫星定位系统 视频通讯协议》
+- JT/T 1078-2016, Road transport vehicles satellite positioning system - Video communication protocol
 - ISO 14496-12 (ISO BMFF)
 - Adobe Flash Video (FLV)
 
-## 致谢
+## Acknowledgements
 
-本项目在设计和实现过程中参考了 [SmallChi/JT1078](https://github.com/SmallChi/JT1078) 开源项目，特此致谢。
+The design and implementation of this project refer to the open-source project [SmallChi/JT1078](https://github.com/SmallChi/JT1078). Many thanks.
 
-## 生态版图
+## Ecosystem
 
-NewLife 生态按依赖分层，各项目独立版本、独立发版。下面的版图在所有 NewLife 仓库中逐字一致；每个项目链接到代码仓库与主 NuGet 包。
+The NewLife ecosystem is layered by dependency. Each project has its own version and release cadence. The matrix below is identical across all NewLife repositories; each project links to its repository and primary NuGet package.
 
-| 项目 | 一句话定位 | 下载量 |
+| Project | One-line summary | Downloads |
 | --- | --- | --- |
-| **基础底座** | | |
-| [NewLife.Core](https://github.com/NewLifeX/X) | 日志、配置、缓存、网络、序列化、定时调度与 APM 追踪。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 数据中间件：单表百亿级、自动分表、读写分离，支持 10 多种数据库。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
-| [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 高性能网络库：单机 177 万 pps、14.5 Gbps（TCP 1KB，2026-10 实测），400 万 Tcp 长连接。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
-| [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | 协议通信与 RPC 框架，面向 CS 应用与物联网设备。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
-| [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | 把 .NET 应用安装为操作系统守护进程：Windows 服务与 Linux systemd。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |
-| [NewLife.Templates](https://github.com/NewLifeX/NewLife.Zero) | `dotnet new` 项目模板：控制台、Web、WebApi、服务、数据与物联网。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Templates?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Templates) |
-| **数据存储与消息** | | |
-| [NewLife.Redis](https://github.com/NewLifeX/NewLife.Redis) | Redis 客户端：微秒级延迟、百万级吞吐，内置消息队列。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Redis?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Redis) |
-| [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | 纯托管 RocketMQ 客户端，支持 Apache RocketMQ 与阿里云消息队列。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.RocketMQ?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.RocketMQ) |
-| [NewLife.MQTT](https://github.com/NewLifeX/NewLife.MQTT) | MQTT 客户端与服务端，客户端支持阿里云物联网。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MQTT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MQTT) |
-| [NewLife.NovaDb](https://github.com/NewLifeX/NewLife.NovaDb) | C# 混合数据库：嵌入/网络双模，关系型、时序、消息队列与 KV 于一体。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.NovaDb?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.NovaDb) |
-| [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | MySql 驱动与数据访问辅助层，基于 NewLife 数据栈实现。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MySql?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MySql) |
-| **Web、AI 与分布式** | | |
-| [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | 魔方快速开发平台：用户权限、SSO、OAuth 服务端与 CRUD 脚手架。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Cube?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Cube) |
-| [Stardust](https://github.com/NewLifeX/Stardust) | 星尘分布式服务平台：节点管理、APM、配置中心、注册中心与发布中心。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
-| [AntJob](https://github.com/NewLifeX/AntJob) | 蚂蚁调度：分布式任务与实时数据平台，支持分片、重试与回溯补算。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AntJob?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AntJob) |
-| [NewLife.AI](https://github.com/NewLifeX/NewLife.AI) | 统一接入 46 家大模型服务商，附带开箱即用的 ChatAI Web 对话应用。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AI?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AI) |
-| **工业与物联网** | | |
-| [NewLife.IoT](https://github.com/NewLifeX/NewLife.IoT) | IoT 标准库，定义物联网通信协议契约与设备抽象。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IoT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IoT) |
-| [NewLife.Modbus](https://github.com/NewLifeX/NewLife.Modbus) | Modbus TCP/RTU/ASCII，基于 NewLife.IoT 实现。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Modbus?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Modbus) |
-| [NewLife.Siemens](https://github.com/NewLifeX/NewLife.Siemens) | 西门子 PLC 协议，基于 NewLife.IoT 实现。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Siemens?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Siemens) |
-| [NewLife.Omron](https://github.com/NewLifeX/NewLife.Omron) | 欧姆龙 PLC 协议，基于 NewLife.IoT 实现。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Omron?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Omron) |
-| [NewLife.Melsec](https://github.com/NewLifeX/NewLife.Melsec) | 三菱 Melsec PLC 协议，基于 NewLife.IoT 实现。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Melsec?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Melsec) |
-| [NewLife.OPC](https://github.com/NewLifeX/NewLife.OPC) | OPC 客户端，用于工业数据采集。 | — |
-| [NewLife.BACnet](https://github.com/NewLifeX/NewLife.BACnet) | BACnet 楼宇自控协议栈。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.BACnet?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.BACnet) |
-| [ZeroIoT](https://github.com/NewLifeX/ZeroIoT) | 开源轻量级 IoT 平台，含网关与设备管理。 | — |
-| **车联网** | | |
-| NewLife.JT808 | JT/T 808 车辆定位协议：70+ 消息体，覆盖 2011/2013/2019 三个版本。 | ![NuGet](https://img.shields.io/nuget/dt/NewLife.JT808?style=flat-square&logo=nuget&label=downloads) |
-| NewLife.JT809 | JT/T 809 部标平台互联协议，面向运输管理部门。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.JT809?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.JT809) |
-| NewLife.JT1078 | JT/T 1078 车载视频：RTP 解析、FLV/fMP4 转封装与直播推送。 | ![NuGet](https://img.shields.io/nuget/dt/NewLife.JT1078?style=flat-square&logo=nuget&label=downloads) |
-| **领域组件** | | |
-| [NewLife.Office](https://github.com/NewLifeX/NewLife.Office) | 一个包覆盖 Excel、Word、PPT、PDF 等 15+ 文档格式。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Office?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Office) |
-| [NewLife.Audio](https://github.com/NewLifeX/NewLife.Audio) | 跨平台音频：编解码、设备 IO、DSP、容器与流式处理。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Audio?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Audio) |
-| [NewLife.Video](https://github.com/NewLifeX/NewLife.Video) | 视频编解码、封装格式、帧处理与流媒体。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Video?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Video) |
-| [NewLife.Map](https://github.com/NewLifeX/NewLife.Map) | 百度/高德/腾讯/天地图统一接口，支持地理编码与坐标转换。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Map?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Map) |
-| [NewLife.IP](https://github.com/NewLifeX/NewLife.IP) | IPv4 归属地：离线内存映射库 + 在线 API 双源。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IP?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IP) |
-| **工具与产品** | | |
-| [CrazyCoder](https://github.com/NewLifeX/XCoder) | 码神工具：网络、串口、加解密、正则、Modbus 与 MQTT。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCoder?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCoder) |
-| [GitCandy](https://github.com/NewLifeX/GitCandy) | 自托管 Git 源代码管理系统。 | — |
-| [LuckyClover](https://github.com/NewLifeX/LuckyClover) | 从低版本宿主启动时，自动安装匹配的 .NET 运行时。 | — |
+| **Foundation** | | |
+| [NewLife.Core](https://github.com/NewLifeX/X) | Logging, configuration, caching, networking, serialization, scheduling and APM tracing. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Data middleware: hundred-billion-row tables, automatic sharding, read/write splitting, 10+ databases. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | High-performance networking: 1.77M pps and 14.5 Gbps per node (TCP 1KB, measured 2026-10), 4M TCP long connections. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
+| [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Protocol communication and RPC framework for C/S applications and IoT devices. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
+| [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Installs .NET applications as OS daemons: Windows services and Linux systemd. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |
+| [NewLife.Templates](https://github.com/NewLifeX/NewLife.Zero) | `dotnet new` templates: console, web, WebApi, service, data and IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Templates?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Templates) |
+| **Data and messaging** | | |
+| [NewLife.Redis](https://github.com/NewLifeX/NewLife.Redis) | Redis client with microsecond latency, million-level throughput and built-in message queues. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Redis?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Redis) |
+| [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | Pure managed RocketMQ client for Apache RocketMQ and Alibaba Cloud messaging. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.RocketMQ?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.RocketMQ) |
+| [NewLife.MQTT](https://github.com/NewLifeX/NewLife.MQTT) | MQTT client and server, including Alibaba Cloud IoT support. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MQTT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MQTT) |
+| [NewLife.NovaDb](https://github.com/NewLifeX/NewLife.NovaDb) | Hybrid C# database: embedded/network modes with relational, time-series, queue and KV. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.NovaDb?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.NovaDb) |
+| [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | MySql driver and data access helpers on the NewLife data stack. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MySql?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MySql) |
+| **Web, AI and distributed** | | |
+| [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | Rapid development platform with permissions, SSO, OAuth server and CRUD scaffolding. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Cube?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Cube) |
+| [Stardust](https://github.com/NewLifeX/Stardust) | Distributed service platform: node management, APM, config center, registry and release center. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
+| [AntJob](https://github.com/NewLifeX/AntJob) | Distributed scheduling and real-time data platform with sharding, retry and backfill. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AntJob?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AntJob) |
+| [NewLife.AI](https://github.com/NewLifeX/NewLife.AI) | Unified access to 46 large-model providers with a ready-to-use ChatAI web app. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AI?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AI) |
+| **Industry and IoT** | | |
+| [NewLife.IoT](https://github.com/NewLifeX/NewLife.IoT) | IoT standard library defining protocol contracts and device abstractions. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IoT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IoT) |
+| [NewLife.Modbus](https://github.com/NewLifeX/NewLife.Modbus) | Modbus TCP/RTU/ASCII built on NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Modbus?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Modbus) |
+| [NewLife.Siemens](https://github.com/NewLifeX/NewLife.Siemens) | Siemens PLC protocol built on NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Siemens?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Siemens) |
+| [NewLife.Omron](https://github.com/NewLifeX/NewLife.Omron) | Omron PLC protocol built on NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Omron?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Omron) |
+| [NewLife.Melsec](https://github.com/NewLifeX/NewLife.Melsec) | Mitsubishi Melsec PLC protocol built on NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Melsec?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Melsec) |
+| [NewLife.OPC](https://github.com/NewLifeX/NewLife.OPC) | OPC client for industrial data acquisition. | — |
+| [NewLife.BACnet](https://github.com/NewLifeX/NewLife.BACnet) | BACnet building automation protocol stack. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.BACnet?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.BACnet) |
+| [ZeroIoT](https://github.com/NewLifeX/ZeroIoT) | Lightweight open-source IoT platform with gateway and device management. | — |
+| **Connected vehicles** | | |
+| NewLife.JT808 | JT/T 808 vehicle positioning protocol: 70+ message bodies across 2011/2013/2019. | ![NuGet](https://img.shields.io/nuget/dt/NewLife.JT808?style=flat-square&logo=nuget&label=downloads) |
+| NewLife.JT809 | JT/T 809 platform interconnection protocol for transport authorities. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.JT809?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.JT809) |
+| NewLife.JT1078 | JT/T 1078 in-vehicle video: RTP parsing, FLV/fMP4 remuxing and live streaming. | ![NuGet](https://img.shields.io/nuget/dt/NewLife.JT1078?style=flat-square&logo=nuget&label=downloads) |
+| **Domain components** | | |
+| [NewLife.Office](https://github.com/NewLifeX/NewLife.Office) | One package for Excel, Word, PPT, PDF and 15+ document formats. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Office?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Office) |
+| [NewLife.Audio](https://github.com/NewLifeX/NewLife.Audio) | Cross-platform audio: codecs, device IO, DSP, containers and streaming. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Audio?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Audio) |
+| [NewLife.Video](https://github.com/NewLifeX/NewLife.Video) | Video codecs, container formats, frame processing and streaming. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Video?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Video) |
+| [NewLife.Map](https://github.com/NewLifeX/NewLife.Map) | Unified Baidu/Amap/Tencent/Tianditu interface with geocoding and coordinate conversion. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Map?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Map) |
+| [NewLife.IP](https://github.com/NewLifeX/NewLife.IP) | IPv4 geolocation: offline memory-mapped database plus online API. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IP?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IP) |
+| **Tools and products** | | |
+| [CrazyCoder](https://github.com/NewLifeX/XCoder) | Network, serial port, crypto, regex, Modbus and MQTT toolbox. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCoder?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCoder) |
+| [GitCandy](https://github.com/NewLifeX/GitCandy) | Self-hosted Git source control system. | — |
+| [LuckyClover](https://github.com/NewLifeX/LuckyClover) | Automatically installs the matching .NET runtime when launched by an older host. | — |
 
-> 徽章取各项目主包；主题包、扩展包与卫星包见对应 NuGet 页面。JT808/JT1078 正在发布准备中，包上线后徽章自动显示下载量。未在表中列出的 30 多个包（FTP、LoRa、Office 扩展、各类协议驱动等）见 [NewLifeX 组织](https://github.com/NewLifeX) 与 [newlifex.com](https://newlifex.com)。
+> Badges refer to each project's primary package; theme, extension and satellite packages are on their NuGet pages. JT808/JT1078 packages are being prepared; download badges appear once published. The 30+ packages not listed here (FTP, LoRa, Office extensions, protocol drivers, etc.) are on the [NewLifeX organization](https://github.com/NewLifeX) and [newlifex.com](https://newlifex.com).
 
-## 新生命开发团队
+## NewLife Team
 
 <img src="https://newlifex.com/logo.png" width="48" align="right" alt="NewLife" />
 
-新生命团队成立于 2002 年，二十余年专注 .NET 与物联网技术生态，主导开源项目近百个（生态版图收录 34 个主干项目），为电力、物流、医疗、工控、互联网等行业提供软硬件一体化解决方案；以“学无先后达者为师”为信条。
+Founded in 2002, the NewLife team has focused on .NET and IoT technologies for more than two decades, leading nearly 100 open-source projects (34 core projects in the ecosystem matrix) and delivering software/hardware solutions for power, logistics, healthcare, industrial control and internet industries.
 
-开源组件在 NuGet 累计下载 <!--nuget-total:start-->6.48M<!--nuget-total:end--> 次（全生态口径，截至 2026-10）。
+Open-source components have been downloaded more than <!--nuget-total:start-->6.48M<!--nuget-total:end--> times on NuGet (whole ecosystem, as of 2026-10).
 
-网站：https://newlifex.com · 开源组织：https://github.com/NewLifeX
+Website: https://newlifex.com · Organization: https://github.com/NewLifeX
 
-<details>
-<summary>微信公众号：智能大石头（扫码关注）</summary>
+## License
 
-![智能大石头](https://newlifex.com/stone.jpg)
-
-</details>
-
-## 许可证
-
-[MIT](LICENSE) © 2022-2026 新生命开发团队
+[MIT](LICENSE) © 2022-2026 NewLife
