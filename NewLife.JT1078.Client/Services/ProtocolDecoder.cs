@@ -1,5 +1,6 @@
 using System.Reflection;
 using NewLife.JT1078.Client.Models;
+using NewLife.JT1078.Models;
 using NewLife.JT1078.Protocols;
 
 namespace NewLife.JT1078.Client.Services;
@@ -229,7 +230,45 @@ public static class ProtocolDecoder
                 result.Fields.Add(ReadUInt16(body, ref st, "GetOffCount", "下车人数"));
                 break;
 
-            // AVResourceList 和某些复杂消息暂不做完整解析
+            case MessageKinds.AVResourceList:
+                result.IsParsed = true;
+                // SerialNumber(2) + Count(4) + Count × Item(28)
+                result.Fields.Add(ReadInt16(body, ref st, "SerialNumber", "流水号"));
+
+                var countField = ReadInt32(body, ref st, "Count", "资源总数");
+                result.Fields.Add(countField);
+                var count = Int32.TryParse(countField.Value, out var c) ? c : 0;
+
+                for (var i = 0; i < count; i++)
+                {
+                    // 单条资源项固定 28 字节，数据不足时停止并提示
+                    if (body.Length - st < 28)
+                    {
+                        result.Fields.Add(new DecodedField { Name = "⚠️ 资源项截断", Value = $"声明 {count} 项，实际解析 {i} 项" });
+                        break;
+                    }
+
+                    var start = st;
+                    var channel = body[st++];
+                    var startTime = ReadBCDTime(body, ref st, "StartTime");
+                    var endTime = ReadBCDTime(body, ref st, "EndTime");
+                    var alarms = ReadUInt64(body, ref st, "AlarmFlags");
+                    var resourceKind = (T1205ResourceKind)body[st++];
+                    var codeStream = (CodeStreams)body[st++];
+                    var storage = (T1205StorageKind)body[st++];
+                    var size = ReadInt32(body, ref st, "FileSize");
+
+                    result.Fields.Add(new DecodedField
+                    {
+                        Name = $"资源[{i}]",
+                        Value = $"通道 {channel}｜{startTime.Value} ~ {endTime.Value}｜{resourceKind}｜码流 {codeStream}｜{storage}｜{size.Value} 字节｜报警 {alarms.Value}",
+                        RawHex = BitConverter.ToString(body.AsSpan(start, 28).ToArray()),
+                        Description = "音视频资源项",
+                    });
+                }
+                break;
+
+            // 其余复杂消息暂不做完整解析
             default:
                 result.Fields.Add(new DecodedField { Name = "⚠️ 未实现解码", Value = $"消息类型 {kind} (0x{(UInt16)kind:X4}) 的解码器尚未实现" });
                 break;
@@ -281,6 +320,14 @@ public static class ProtocolDecoder
             value = (value << 8) | data[offset + i];
         offset += 8;
         return new DecodedField { Name = name, Value = $"0x{value:X16}", RawHex = BitConverter.ToString(raw), Description = desc };
+    }
+
+    private static DecodedField ReadInt32(Byte[] data, ref Int32 offset, String name, String? desc = null)
+    {
+        var raw = data.AsSpan(offset, 4).ToArray();
+        var value = (Int32)((UInt32)data[offset] << 24 | (UInt32)data[offset + 1] << 16 | (UInt32)data[offset + 2] << 8 | data[offset + 3]);
+        offset += 4;
+        return new DecodedField { Name = name, Value = value.ToString(), RawHex = BitConverter.ToString(raw), Description = desc };
     }
 
     private static DecodedField ReadIP(Byte[] data, ref Int32 offset, String name, String? desc = null)

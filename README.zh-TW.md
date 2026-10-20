@@ -65,7 +65,7 @@ builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
 
 | 套件 | 說明 |
 |---|---|
-| NewLife.JT1078 | 核心協定 + 編解碼 + FLV/fMP4 轉封裝 |
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | 核心協定 + 編解碼 + FLV/fMP4 轉封裝 |
 | NewLife.JT1078.Server | TCP/UDP 伺服器 + DI 建構器 + HLS/MP3 編碼 |
 
 ## Native AOT
