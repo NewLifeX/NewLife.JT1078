@@ -31,6 +31,9 @@ public class JT1078Server : NetServer<JT1078Session>
         Name = "JT1078";
         Port = 1078;
 
+        // 仅监听 TCP，UDP 由 JT1078UdpServer 独立承载，避免 NetServer 默认双栈占用 UDP 端口
+        ProtocolType = NetType.Tcp;
+
         // 启用协议模式：RTP 报文的定界与构建由 JTCodec 承担
         Protocol = new JTCodec();
     }
@@ -49,6 +52,17 @@ public class JT1078Server : NetServer<JT1078Session>
         base.OnStart();
 
         WriteLog("JT1078 server started on port {0}", Port);
+    }
+
+    /// <summary>停止服务</summary>
+    /// <param name="reason">停止原因</param>
+    protected override void OnStop(String reason)
+    {
+        // 释放命令总线并置空，便于重启时重新初始化事件订阅
+        DeviceManager?.Dispose();
+        DeviceManager = null;
+
+        base.OnStop(reason);
     }
 
     /// <summary>RTP 分包合并</summary>

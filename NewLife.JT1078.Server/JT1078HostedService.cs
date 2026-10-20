@@ -9,17 +9,24 @@ namespace NewLife.JT1078.Server;
 public class JT1078HostedService : IHostedService
 {
     #region 属性
-    private NetServer _tcpServer;
-    private JT1078UdpServer _udpServer;
-    private readonly ITracer _tracer;
+    private readonly JT1078Server _tcpServer;
+    private readonly JT1078UdpServer _udpServer;
+    private readonly DeviceSessionManager _deviceManager;
+    private readonly IServiceProvider _provider;
     #endregion
 
     #region 构造
     /// <summary>实例化 JT1078 后台服务</summary>
-    /// <param name="tracer">链路追踪</param>
-    public JT1078HostedService(ITracer tracer)
+    /// <param name="server">TCP 服务端（DI 单例）</param>
+    /// <param name="udpServer">UDP 服务端（DI 单例）</param>
+    /// <param name="deviceManager">设备命令总线（DI 单例）</param>
+    /// <param name="provider">服务提供者</param>
+    public JT1078HostedService(JT1078Server server, JT1078UdpServer udpServer, DeviceSessionManager deviceManager, IServiceProvider provider)
     {
-        _tracer = tracer;
+        _tcpServer = server;
+        _udpServer = udpServer;
+        _deviceManager = deviceManager;
+        _provider = provider;
     }
     #endregion
 
@@ -30,36 +37,35 @@ public class JT1078HostedService : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var set = JT1078Setting.Current;
+        var tracer = _provider.GetService(typeof(ITracer)) as ITracer;
 
-        // 启动 TCP 服务
+        // 启动 TCP 服务。使用 DI 单例，确保控制器与运行中的服务端共享设备会话
         if (set.Port > 0)
         {
-            var svr = new NewLife.JT1078.Server.JT1078Server
-            {
-                Port = set.Port,
-                Tracer = _tracer,
-                Log = XTrace.Log,
-            };
+            _tcpServer.Port = set.Port;
+            _tcpServer.Setting = set;
+            _tcpServer.Tracer = tracer;
+            _tcpServer.Log = XTrace.Log;
+            _tcpServer.ServiceProvider = _provider;
+            _tcpServer.DeviceManager = _deviceManager;
 
             if (set.Debug)
             {
-                svr.SessionLog = XTrace.Log;
-                svr.SocketLog = XTrace.Log;
-                svr.LogSend = true;
-                svr.LogReceive = true;
+                _tcpServer.SessionLog = XTrace.Log;
+                _tcpServer.SocketLog = XTrace.Log;
+                _tcpServer.LogSend = true;
+                _tcpServer.LogReceive = true;
             }
 
-            svr.Start();
-            _tcpServer = svr;
+            _tcpServer.Start();
         }
 
         // 启动 UDP 服务
         if (set.UdpPort > 0)
         {
-            _udpServer = new JT1078UdpServer
-            {
-                Setting = set,
-            };
+            _udpServer.Setting = set;
+            _udpServer.ServiceProvider = _provider;
+            _udpServer.DeviceManager = _deviceManager;
             _udpServer.Start();
         }
 
@@ -71,14 +77,8 @@ public class JT1078HostedService : IHostedService
     /// <returns></returns>
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        lock (this)
-        {
-            _tcpServer?.Stop(nameof(StopAsync));
-            _tcpServer = null;
-
-            _udpServer?.Stop();
-            _udpServer = null;
-        }
+        _tcpServer.Stop(nameof(StopAsync));
+        _udpServer.Stop();
 
         return Task.CompletedTask;
     }

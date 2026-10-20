@@ -208,6 +208,52 @@ public class ServerProtocolTests
         }
     }
 
+    [Fact(DisplayName = "服务端协议模式：流式消息体物化")]
+    public async Task Server_StreamingBody()
+    {
+        var port = GetFreePort();
+        using var server = new JT1078Server { Port = port, Cache = new MemoryCache() };
+        server.Setting.Port = port;
+        server.Start();
+
+        try
+        {
+            using var client = new TcpClient();
+            await client.ConnectAsync(IPAddress.Loopback, port);
+
+            var session = await WaitSession(server);
+            using var signal = new SemaphoreSlim(0);
+            var received = new List<Byte[]>();
+            session.OnReceiveMessage += (s, m) =>
+            {
+                lock (received) received.Add(m.Payload?.ToArray() ?? []);
+                signal.Release();
+            };
+
+            // 先发头部，令消息体处于流式读取状态，再补发消息体
+            var payload = new Byte[4096];
+            for (var i = 0; i < payload.Length; i++) payload[i] = (Byte)(i & 0xFF);
+            var frame = CreateMessage(5, payload).ToPacket().GetSpan().ToArray();
+
+            var stream = client.GetStream();
+            await stream.WriteAsync(frame.AsMemory(0, 30));
+            await Task.Delay(100);
+            await stream.WriteAsync(frame.AsMemory(30));
+
+            Assert.True(await signal.WaitAsync(5000));
+
+            lock (received)
+            {
+                var data = Assert.Single(received);
+                Assert.Equal(payload, data);
+            }
+        }
+        finally
+        {
+            server.Stop("test");
+        }
+    }
+
     [Fact(DisplayName = "服务端协议模式：下行信令经协议构建发送")]
     public async Task Server_SendJT()
     {

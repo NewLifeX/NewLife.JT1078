@@ -4,6 +4,7 @@ using NewLife.JT1078.Models;
 using NewLife.JT1078.Protocols;
 using NewLife.JT1078.Server;
 using NewLife.Log;
+using System.Text.Json.Serialization;
 
 namespace NewLife.JT1078.Web.Controllers;
 
@@ -105,9 +106,11 @@ public class CommandRequest
     public Int32 Channel { get; set; }
 
     /// <summary>音视频编码类型</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public AVTypes AVType { get; set; }
 
     /// <summary>数据类型（下行信令）</summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public DataTypes DataType { get; set; }
 
     /// <summary>负载数据（十六进制字符串）</summary>

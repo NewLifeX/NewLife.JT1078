@@ -160,6 +160,8 @@ namespace NewLife.JT1078.Protocols
         /// <param name="payloadLength">负载字节数</param>
         private void WriteHeader(Stream stream, Int64 payloadLength)
         {
+            if (payloadLength is < 0 or > UInt16.MaxValue) throw new ArgumentOutOfRangeException(nameof(payloadLength));
+
             var writer = new Binary { Stream = stream, IsLittleEndian = false };
 
             writer.WriteFixedString("01cd", 4);
@@ -297,11 +299,10 @@ namespace NewLife.JT1078.Protocols
             if (dataType != DataTypes.Transparent) len += 8;
             if (dataType <= DataTypes.VideoBFrame) len += 2 + 2;
 
-            var pk2 = pk.Slice(len, pk.Total - len);
-            if (pk2.Total < 2) return 0;
+            if (pk.Total < len + 2) return 0;
 
-            // 手动读取 2 字节大端长度 (替换已过时的 Packet.ReadUInt16)
-            len += (pk2[0] << 8) | pk2[1];
+            // 手动读取 2 字节大端长度 (替换已过时的 Packet.ReadUInt16)，索引器自动跨链
+            len += (pk[len] << 8) | pk[len + 1];
 
             len += 2;
 

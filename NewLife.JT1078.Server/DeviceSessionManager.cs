@@ -131,6 +131,30 @@ public class DeviceSessionManager : DisposeBase
 
     /// <summary>是否存在指定设备的本地会话</summary>
     public Boolean Contains(String key) => _sessions.ContainsKey(key);
+
+    /// <summary>移除超时的 UDP 设备会话</summary>
+    /// <param name="timeout">无数据超时时长</param>
+    /// <returns>移除数量</returns>
+    public Int32 RemoveExpired(TimeSpan timeout)
+    {
+        var now = DateTime.Now;
+        var count = 0;
+        foreach (var item in _sessions)
+        {
+            if (item.Value is JT1078UdpSession session && now - session.LastActive > timeout)
+            {
+                if (_sessions.TryRemove(item.Key, out _))
+                {
+                    // 同步关闭消息中枢，释放订阅者与缓存
+                    if (!session.SIM.IsNullOrEmpty()) MsgHubRegistry.Remove(session.SIM, session.Channel);
+
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
     #endregion
 
     #region 命令下发

@@ -31,6 +31,9 @@ public class JT1078Session : NetSession<JT1078Server>
     /// <summary>终端 SIM 卡号。由上行报文自动记录</summary>
     public String SIM { get; set; }
 
+    /// <summary>逻辑通道号。由上行报文自动记录</summary>
+    public Int32 Channel { get; set; }
+
     /// <summary>接收到 RTP 报文时触发</summary>
     public event EventHandler<JTMessage> OnReceiveMessage;
     #endregion
@@ -46,6 +49,9 @@ public class JT1078Session : NetSession<JT1078Server>
             var mgr = Host?.DeviceManager;
             mgr?.Unregister(DeviceKey);
         }
+
+        // 设备下线时清理消息中枢，避免订阅者与缓存泄漏
+        if (!SIM.IsNullOrEmpty()) MsgHubRegistry.Remove(SIM, Channel);
     }
     #endregion
 
@@ -57,13 +63,22 @@ public class JT1078Session : NetSession<JT1078Server>
         LastActive = DateTime.Now;
 
         var rawMsg = e.Message as JTMessage;
+
+        // 头部先行交付时消息体为流式读取器，处理器返回前必须读满物化
+        if (rawMsg != null && rawMsg.Payload == null && rawMsg.Body != null)
+            rawMsg.Payload = rawMsg.Body.ReadAllAsync().AsTask().GetAwaiter().GetResult();
+
         if (rawMsg != null && !rawMsg.SIM.IsNullOrEmpty())
         {
             SIM = rawMsg.SIM;
+            Channel = rawMsg.Channel;
 
             var key = rawMsg.GetKey();
             if (DeviceKey != key)
             {
+                // 通道变化时先注销旧键，避免设备字典残留
+                if (DeviceKey != null) Host?.DeviceManager?.Unregister(DeviceKey);
+
                 DeviceKey = key;
                 Host?.DeviceManager?.Register(DeviceKey, this);
             }
@@ -103,7 +118,11 @@ public class JT1078Session : NetSession<JT1078Server>
             if (hub.Device == null) hub.Device = this;
 
             // 协议模式下消息在处理器返回后即收尾，异步分发前先物化负载
-            if (hub.HasUsers) _ = DispatchAsync(hub, msg);
+            if (hub.HasUsers)
+            {
+                TouchPush();
+                _ = DispatchAsync(hub, msg);
+            }
         }
     }
 

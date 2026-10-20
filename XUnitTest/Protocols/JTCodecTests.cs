@@ -272,6 +272,28 @@ public class JTCodecTests
         Assert.Equal(30, pk.Total);
     }
 
+    [Fact(DisplayName = "帧构建：发布负载超出协议上限")]
+    public void Build_PayloadTooLarge()
+    {
+        var msg = CreateVideoMessage(0);
+        msg.Payload = new ArrayPacket(new Byte[UInt16.MaxValue + 1]);
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => msg.ToPacket());
+    }
+
+    [Fact(DisplayName = "长度探测：链式分包")]
+    public void GetLength_ChainedPayload()
+    {
+        var data = CreateVideoMessage(32).ToPacket().GetSpan().ToArray();
+
+        IPacket head = new ArrayPacket(data.AsSpan(0, 10).ToArray());
+        head = head.Append(new ArrayPacket(data.AsSpan(10).ToArray()));
+
+        Assert.Equal(data.Length, head.Total);
+        Assert.Equal(data.Length, JTMessage.GetLength(head));
+        Assert.Equal(data.Length, JTMessage.GetLength2(head.ToArray()));
+    }
+
     /// <summary>只读序列分段</summary>
     private sealed class Segment : ReadOnlySequenceSegment<Byte>
     {

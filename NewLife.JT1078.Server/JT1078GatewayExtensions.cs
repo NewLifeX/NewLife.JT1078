@@ -23,12 +23,13 @@ public static class JT1078GatewayExtensions
     {
         // 注册核心服务
         services.TryAddSingleton<JT1078Server>();
+        services.TryAddSingleton<JT1078UdpServer>();
         services.TryAddSingleton<SessionManager>();
         services.TryAddSingleton<HlsSegmentCache>();
         services.TryAddSingleton<IJT1078Authorization, JT1078AuthorizationDefault>();
 
-        // 注册设备命令总线
-        services.AddSingleton<DeviceSessionManager>();
+        // 注册设备命令总线（与服务端共享同一实例）
+        services.TryAddSingleton<DeviceSessionManager>();
 
         // 注册托管服务
         services.AddHostedService<JT1078HostedService>();

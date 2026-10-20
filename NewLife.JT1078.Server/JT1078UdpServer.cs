@@ -45,6 +45,8 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
         base.Dispose(disposing);
 
         Stop();
+        DeviceManager?.Dispose();
+        DeviceManager = null;
         _server.TryDispose();
         _cts.TryDispose();
     }
@@ -100,21 +102,28 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
     private void ReceiveLoop()
     {
         var bufferSize = Setting.BufferSize > 0 ? Setting.BufferSize : 8192;
+        var buffer = new Byte[bufferSize];
+        var lastSweep = DateTime.Now;
 
         while (!_cts.IsCancellationRequested)
         {
             try
             {
-                var buffer = new Byte[bufferSize];
                 var remoteEndPoint = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 0) as System.Net.EndPoint;
 
                 var receivedBytes = _server.ReceiveFrom(buffer, System.Net.Sockets.SocketFlags.None, ref remoteEndPoint);
 
                 if (receivedBytes > 0)
                 {
-                    var data = new Byte[receivedBytes];
-                    Buffer.BlockCopy(buffer, 0, data, 0, receivedBytes);
-                    ProcessDatagram(data, remoteEndPoint);
+                    ProcessDatagram(buffer, 0, receivedBytes, remoteEndPoint);
+                }
+
+                // 定期清理长时间无数据的 UDP 设备会话，避免设备字典与消息中枢泄漏
+                var now = DateTime.Now;
+                if ((now - lastSweep).TotalSeconds >= 60)
+                {
+                    lastSweep = now;
+                    DeviceManager?.RemoveExpired(TimeSpan.FromSeconds(120));
                 }
             }
             catch (ObjectDisposedException) { break; }
@@ -129,13 +138,13 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
 
     #region 数据处理
     /// <summary>处理收到的 UDP 数据报</summary>
-    private void ProcessDatagram(Byte[] data, System.Net.EndPoint remoteEndPoint)
+    private void ProcessDatagram(Byte[] data, Int32 offset, Int32 count, System.Net.EndPoint remoteEndPoint)
     {
         try
         {
+            var packet = new ArrayPacket(data, offset, count);
             var msg = new JTMessage();
-            var packet = new ArrayPacket(data);
-            msg.Read(packet);
+            if (!msg.Read(packet) || msg.SIM.IsNullOrEmpty()) return;
 
             // 查找或注册设备会话
             var key = $"{msg.SIM}_{msg.Channel}";

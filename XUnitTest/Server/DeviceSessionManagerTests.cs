@@ -38,4 +38,17 @@ public class DeviceSessionManagerTests
         mgr.Unregister("138001380000_1");
         Assert.False(mgr.Contains("138001380000_1"));
     }
+
+    [Fact(DisplayName = "清理超时 UDP 设备会话")]
+    public void RemoveExpired_UdpSession()
+    {
+        using var mgr = new DeviceSessionManager(null);
+
+        mgr.Register("old", new JT1078UdpSession { LastActive = DateTime.Now.AddMinutes(-5) });
+        mgr.Register("fresh", new JT1078UdpSession { LastActive = DateTime.Now });
+
+        Assert.Equal(1, mgr.RemoveExpired(TimeSpan.FromMinutes(1)));
+        Assert.False(mgr.Contains("old"));
+        Assert.True(mgr.Contains("fresh"));
+    }
 }
