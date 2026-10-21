@@ -18,74 +18,128 @@ Implementação .NET do protocolo de comunicação de vídeo JT/T 1078 para sist
 
 ## Recursos
 
-- **Protocolo RTP JT1078**: análise e construção completas com 29 tipos de carga de áudio/vídeo
-- **Delimitação de quadros**: divisão de pacotes colados e análise header-first baseadas em `IMessageCodec` do NewLife.Core
-- **Mesclagem de fragmentos RTP**: armazenamento e mesclagem automática de fragmentos I/P/B
-- **Decodificação de áudio**: G.711A, G.711U, IMA-ADPCM com remoção do cabeçalho HiSilicon
-- **Análise H.264**: divisão NAL, SPS/PPS, códigos de início e bytes de prevenção
-- **Remuxagem**: FLV e fMP4 em tempo real, saída HTTP-FLV/WS-FLV, fMP4 e HLS
-- **Servidor**: TCP/UDP, endpoints HTTP/WS, reprodução e barramento de comandos em cluster (IEventBus)
-- **NativeAOT**: protocolo e tabelas de idioma sem reflexão; imagem nativa verificada em CI
-- **Localização**: mensagens fonte em inglês, 10 traduções incluídas e fallback para inglês
+### Protocolo
+- **Protocolo RTP JT1078**: análise e construção completas de mensagens RTP com 29 tipos de carga de áudio/vídeo
+- **Delimitação de quadros**: divisão de pacotes colados e análise com cabeçalho primeiro, baseadas em `IMessageCodec` do NewLife.Core
+- **Mesclagem de fragmentos RTP**: armazenamento e mesclagem automática de fragmentos de quadros I/P/B
+
+### Codecs de áudio e vídeo
+- **Decodificação de áudio**: G.711A (A-law), G.711U (μ-law), IMA-ADPCM, com remoção do cabeçalho HiSilicon
+- **Codificação AAC**: codificação AAC via FaacEncoder (P/Invoke)
+- **Análise H.264**: divisão de unidades NAL, análise de SPS/PPS, tratamento de códigos de início e remoção de bytes de prevenção de emulação
+
+### Remuxagem de contêineres
+- **Remuxagem FLV**: conversão em tempo real de RTP para HTTP-FLV / WebSocket-FLV para reprodução com flv.js
+- **Remuxagem fMP4**: saída de segmentos CMAF/fMP4 com as caixas principais do ISO BMFF
+
+### Servidor
+- **Serviço TCP**: servidor JT1078 TCP pronto para uso, com configuração de porta e log de depuração
+- **Serviço UDP**: transporte UDP do JT/T 1078 coexistindo com TCP
+- **Streaming HTTP/WS**: endpoints ASP.NET Core integrados para FLV/fMP4/AAC/PCM/WAV
+- **Reprodução**: reprodução histórica de áudio/vídeo por SIM, canal e intervalo de tempo
+- **Comandos de dispositivo**: barramento de comandos em cluster baseado em IEventBus, autônomo ou cluster Redis
+
+### Gestão e integração
+- **Presença de dispositivos**: rastreamento em tempo real dos eventos de conexão/desconexão dos terminais
+- **Autorização de streams**: autenticação por token que protege os endpoints ao vivo
+- **Builder DI**: registro fluente com `AddJT1078Gateway().AddTcp().AddHttp()`
+- **IHostedService**: gestão automática do ciclo de vida do ASP.NET Core
+- **NativeAOT**: protocolo e tabelas de idioma sem reflexão; imagem nativa verificada por teste de fumaça
+- **Localização**: mensagens fonte em inglês com 10 traduções incluídas e fallback para inglês
 
 ## Início rápido
 
+### Instalar pacotes NuGet
+
 ```bash
-dotnet add package NewLife.JT1078           # biblioteca de protocolo (inclui FLV/fMP4)
+dotnet add package NewLife.JT1078           # biblioteca de protocolo principal (inclui remuxagem FLV/fMP4)
 dotnet add package NewLife.JT1078.Server    # servidor TCP/UDP + HLS/MP3
 ```
+
+### Analisar uma mensagem RTP
 
 ```csharp
 using System.Buffers;
 using NewLife.JT1078.Protocols;
 
+// Delimitação de quadros: a mensagem é produzida assim que o cabeçalho chega; o corpo é vinculado pela camada de quadro
 var codec = new JTCodec();
 var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
 if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
+    // Inspecionar o tipo de carga
     if (msg.Type == AVTypes.H264)
     {
-        var frame = new H264Decoder().ParseAVFrame(msg);
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
     }
 }
 ```
 
+### Decodificação de áudio
+
+```csharp
+using NewLife.Audio;
+
+var factory = new AudioCodecFactory();
+// Carga do dispositivo -> PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM -> G.711A
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
+```
+
+### Iniciar o servidor de streaming
+
 ```csharp
 using NewLife.JT1078.Server;
 
+// Opção 1: usar diretamente
 var server = new JT1078Server();
 server.Start();
 
-// Ou integração com ASP.NET Core
-builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
+// Opção 2: integração com ASP.NET Core
+builder.Services.AddJT1078Gateway()
+       .AddTcp()
+       .AddHttp();
 ```
 
 ## Pacotes NuGet
 
-| Pacote | Descrição |
-|---|---|
-| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | Protocolo + codecs + remuxagem FLV/fMP4 |
-| NewLife.JT1078.Server | Servidor TCP/UDP + builder DI + HLS/MP3 |
+| Pacote | Descrição | NuGet |
+|---|---|---|
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | Protocolo principal + codecs + remuxagem FLV/fMP4 (Flv/FMp4 integrados ao núcleo) | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | Servidor TCP/UDP + builder DI + codificação HLS/MP3 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## Native AOT
 
-A biblioteca de protocolo e o servidor na configuração padrão suportam NativeAOT e trimming. Os analisadores AOT/trim estão sempre ativos para net8.0 e superior, sem avisos IL. O projeto `AotSmoke` publica uma imagem nativa em CI com `PublishAot=true` e executa os codecs de quadros e as tabelas de idioma.
+A biblioteca de protocolo principal e o servidor na configuração padrão suportam NativeAOT e trimming. Os analisadores AOT/trim estão sempre ativos para os alvos net8.0 e superiores, com zero avisos IL em tempo de compilação. O projeto `AotSmoke` deste repositório publica uma imagem nativa em CI com `PublishAot=true` e exercita os codecs de quadros, a serialização de modelos por reflexão, a montagem de DI, a montagem do servidor e as consultas às tabelas de idioma.
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
 ./out/AotSmoke
 ```
 
+> Plugins, script dinâmico e registro por reflexão em tempo de execução ficam fora do escopo de suporte de AOT (coerente com o NewLife.Core).
+
 ## Localização
 
-Exceções e logs compartilham uma tabela gerada em tempo de compilação. Segue `CultureInfo.CurrentUICulture` e recorre ao inglês quando falta tradução. Sem resx ou assemblies satélite: uma única DLL, compatível com AOT.
+Exceções e logs compartilham uma tabela de localização gerada em tempo de compilação. Ela segue `CultureInfo.CurrentUICulture` por padrão e recorre ao inglês quando falta uma tradução. Sem resx ou assemblies satélite: uma única DLL, segura para AOT nativamente.
+
+| Ajuste | Finalidade |
+|---|---|
+| `CultureInfo.CurrentUICulture` | Origem de idioma padrão; o ASP.NET Core pode variá-la por requisição |
+| `Localization.Culture` | Força o idioma das exceções e do texto normal |
+| `Localization.LogCulture` | Idioma do texto voltado ao desenvolvedor (logs, comentários de configuração) |
 
 ```csharp
+// Todo o site em português
 Localization.Culture = new CultureInfo("pt");
+
+// Serviço web que respeita Accept-Language por requisição
 using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 ```
 
-Idiomas incluídos: `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar`. Para adicionar um idioma, preencha `Locales/<culture>.yml`.
+Traduções incluídas: `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar` (10 traduções incluídas). Para adicionar um idioma, mapeie o texto fonte em inglês para a tradução em `Locales/<culture>.yml`; o gerador de código valida, comprime e registra a tabela em tempo de compilação.
 
 ## Compilação e testes
 
@@ -95,9 +149,69 @@ dotnet test -c Release
 
 Os testes cobrem codec de quadros, sequências multi-segmento, quadros inválidos, mesclagem de fragmentos, BCD, codecs de áudio, H.264, FLV/fMP4, modo protocolo do servidor e tabelas de idioma.
 
-## Ecossistema
+## Arquitetura
 
-A matriz completa de projetos está em [README.md](README.md#ecosystem) (idêntica em todos os repositórios NewLife).
+```
+Dispositivo JT1078 (TCP/UDP:1078)
+    │
+    ▼
+NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
+    │  mesclagem de fragmentos RTP
+    ▼
+JTMessage (mensagem RTP)
+    ├──► H264Decoder (vídeo)
+    ├──► AudioCodecFactory (áudio)
+    │
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► áudio MP3
+    ├──► handlers de áudio ───► AAC / PCM / WAV
+    │
+    ├──► DeviceSessionManager ──► difusão de comandos em cluster (IEventBus)
+    │
+    ▼
+Reprodutor (flv.js / hls.js)
+```
+
+## Implantação em cluster
+
+O servidor suporta implantação multi-instância e encaminha comandos de dispositivo entre instâncias por meio de um barramento de eventos:
+
+```csharp
+// Autônomo (padrão, EventBus em memória)
+services.AddJT1078Gateway().AddTcp().AddHttp();
+
+// Cluster (forneça ICacheProvider via Redis/Stardust)
+// Um EventBus Redis é criado automaticamente e os comandos são difundidos para todas as instâncias
+```
+
+REST API:
+- `POST /Command/Send`: envia um comando a um dispositivo de forma síncrona, roteado automaticamente para a instância que possui o dispositivo
+- `POST /Command/SendAsync`: envia um comando de forma assíncrona com suporte a CancellationToken
+- `GET /Command/Devices`: lista os dispositivos conectados localmente (TCP/UDP)
+
+## Endpoints ao vivo
+
+| Endpoint | Formato | Transporte | Reprodutor |
+|----------|--------|-----------|--------|
+| `/live.flv` | FLV | HTTP / WebSocket | flv.js |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | MSE nativo |
+| `/live.aac` | AAC | HTTP | áudio nativo |
+| `/live.pcm` | PCM | HTTP | áudio nativo |
+| `/live.wav` | WAV | HTTP | áudio nativo |
+| `/live.mp3` | MP3 | HTTP | áudio nativo |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
+
+## Referências de protocolo
+
+- JT/T 1078-2016, Sistemas de posicionamento por satélite de veículos de transporte rodoviário: protocolo de comunicação de vídeo
+- ISO 14496-12 (ISO BMFF)
+- Adobe Flash Video (FLV)
+
+## Agradecimentos
+
+O design e a implementação deste projeto se baseiam no projeto de código aberto [SmallChi/JT1078](https://github.com/SmallChi/JT1078). Muito obrigado.
 
 ## Mapa do ecossistema
 

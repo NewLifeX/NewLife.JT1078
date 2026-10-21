@@ -18,74 +18,128 @@
 
 ## 기능
 
-- **JT1078 RTP 프로토콜**: 29가지 오디오/비디오 유형을 지원하는 RTP 메시지 해석 및 생성
+### 프로토콜
+- **JT1078 RTP 프로토콜**: 29가지 오디오/비디오 페이로드 유형을 지원하는 RTP 메시지 해석 및 생성
 - **프레임 구분**: NewLife.Core `IMessageCodec` 기반의 스티키 패킷 분할과 헤더 우선 해석
 - **RTP 프래그먼트 병합**: I/P/B 프레임 프래그먼트 자동 버퍼링 및 병합
-- **오디오 디코딩**: G.711A, G.711U, IMA-ADPCM, HiSilicon 헤더 제거 지원
-- **H.264 해석**: NAL 분할, SPS/PPS, 시작 코드, 에뮬레이션 방지 바이트 제거
-- **리먹싱**: 실시간 FLV / fMP4, HTTP-FLV / WS-FLV / fMP4 / HLS 출력
-- **서버**: TCP/UDP, HTTP/WS 엔드포인트, 녹화 재생, IEventBus 기반 클러스터 명령 버스
-- **NativeAOT**: 프로토콜과 언어 테이블에 리플렉션 없음, CI 스모크 테스트로 네이티브 이미지 검증
-- **다국어**: 영어 원문과 10개 언어 번역 내장, 번역이 없으면 영어로 폴백
+
+### 오디오 및 비디오 코덱
+- **오디오 디코딩**: G.711A (A-law), G.711U (μ-law), IMA-ADPCM, HiSilicon 헤더 제거 지원
+- **AAC 인코딩**: FaacEncoder (P/Invoke) 기반 AAC 인코딩
+- **H.264 해석**: NAL 유닛 분할, SPS/PPS 해석, 시작 코드 처리, 에뮬레이션 방지 바이트 제거
+
+### 컨테이너 리먹싱
+- **FLV 리먹싱**: RTP를 실시간으로 HTTP-FLV / WebSocket-FLV로 변환하여 flv.js 재생 지원
+- **fMP4 리먹싱**: 핵심 ISO BMFF 박스를 지원하는 CMAF/fMP4 세그먼트 출력
+
+### 서버
+- **TCP 서비스**: 포트 설정과 디버그 로그를 지원하는 바로 사용 가능한 JT1078 TCP 서버
+- **UDP 서비스**: TCP와 함께 동작하는 JT/T 1078 UDP 전송
+- **HTTP/WS 라이브 스트리밍**: FLV/fMP4/AAC/PCM/WAV용 ASP.NET Core 엔드포인트 내장
+- **녹화 재생**: SIM, 채널, 시간 범위로 과거 오디오/비디오 재생
+- **장치 명령**: IEventBus 기반 클러스터 명령 버스, 단독 실행 또는 Redis 클러스터
+
+### 관리 및 통합
+- **장치 온라인 상태**: 단말 연결/해제 이벤트 실시간 추적
+- **스트림 권한 부여**: 토큰 인증으로 라이브 엔드포인트 보호
+- **DI 빌더**: `AddJT1078Gateway().AddTcp().AddHttp()` 체이닝 등록
+- **IHostedService**: ASP.NET Core 수명 주기 자동 관리
+- **NativeAOT**: 리플렉션 없는 프로토콜 및 언어 테이블, 스모크 테스트로 네이티브 이미지 검증
+- **다국어**: 영어 원문에 10개 언어 번역 내장, 번역이 없으면 영어로 폴백
 
 ## 빠른 시작
 
+### NuGet 패키지 설치
+
 ```bash
-dotnet add package NewLife.JT1078           # 코어 프로토콜 라이브러리(FLV/fMP4 포함)
+dotnet add package NewLife.JT1078           # 코어 프로토콜 라이브러리(FLV/fMP4 리먹싱 포함)
 dotnet add package NewLife.JT1078.Server    # TCP/UDP 서버 + HLS/MP3
 ```
+
+### RTP 메시지 해석
 
 ```csharp
 using System.Buffers;
 using NewLife.JT1078.Protocols;
 
+// 프레임 구분: 헤더가 도착하면 메시지가 생성되고, 본문은 프레임 계층에서 바인딩됩니다
 var codec = new JTCodec();
 var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
 if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
+    // 페이로드 유형 확인
     if (msg.Type == AVTypes.H264)
     {
-        var frame = new H264Decoder().ParseAVFrame(msg);
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
     }
 }
 ```
 
+### 오디오 디코딩
+
+```csharp
+using NewLife.Audio;
+
+var factory = new AudioCodecFactory();
+// 장치 페이로드 -> PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM -> G.711A
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
+```
+
+### 스트리밍 서버 시작
+
 ```csharp
 using NewLife.JT1078.Server;
 
+// 방법 1: 직접 사용
 var server = new JT1078Server();
 server.Start();
 
-// ASP.NET Core 통합
-builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
+// 방법 2: ASP.NET Core 통합
+builder.Services.AddJT1078Gateway()
+       .AddTcp()
+       .AddHttp();
 ```
 
 ## NuGet 패키지
 
-| 패키지 | 설명 |
-|---|---|
-| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | 프로토콜 + 코덱 + FLV/fMP4 리먹싱 |
-| NewLife.JT1078.Server | TCP/UDP 서버 + DI 빌더 + HLS/MP3 |
+| 패키지 | 설명 | NuGet |
+|---------|-------------|-------|
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | 코어 프로토콜 + 코덱 + FLV/fMP4 리먹싱(Flv/FMp4가 코어에 통합됨) | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | TCP/UDP 서버 + DI 빌더 + HLS/MP3 인코딩 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## Native AOT
 
-코어 프로토콜 라이브러리와 기본 구성의 서버는 NativeAOT와 트리밍을 지원합니다. net8.0 이상에서는 AOT/트림 분석기가 항상 활성화되어 빌드 시 IL 경고가 없습니다. `AotSmoke` 프로젝트는 CI에서 `PublishAot=true`로 네이티브 이미지를 게시하고 프레임 코덱과 언어 테이블을 검증합니다.
+코어 프로토콜 라이브러리와 기본 구성의 서버는 NativeAOT와 트리밍을 지원합니다. net8.0 이상 대상에서는 AOT/트림 분석기가 항상 활성화되어 빌드 시 IL 경고가 없습니다. 이 저장소의 `AotSmoke` 프로젝트는 CI에서 `PublishAot=true`로 네이티브 이미지를 게시하고 프레임 코덱, 모델 리플렉션 직렬화, DI 조립, 서버 조립, 언어 테이블 조회를 실행합니다.
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
 ./out/AotSmoke
 ```
 
+> 플러그인, 동적 스크립팅, 런타임 리플렉션 등록은 AOT 지원 범위에 포함되지 않습니다(NewLife.Core와 동일한 경계).
+
 ## 현지화
 
 예외와 로그는 컴파일 타임에 생성되는 공용 언어 테이블을 사용합니다. 기본적으로 `CultureInfo.CurrentUICulture`를 따르며 번역이 없으면 영어로 폴백합니다. resx나 위성 어셈블리가 필요 없으며 단일 DLL, AOT 안전합니다.
 
+| 설정 | 용도 |
+|---|---|
+| `CultureInfo.CurrentUICulture` | 기본 언어 소스, ASP.NET Core는 요청별로 변경 가능 |
+| `Localization.Culture` | 예외와 일반 텍스트의 언어 강제 지정 |
+| `Localization.LogCulture` | 개발자용 텍스트(로그, 구성 주석)의 언어 |
+
 ```csharp
+// 사이트 전체 한국어
 Localization.Culture = new CultureInfo("ko");
+
+// 요청별 Accept-Language를 따르는 웹 서비스
 using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 ```
 
-내장 언어: `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar`. 새 언어는 `Locales/<culture>.yml`에 추가합니다.
+10개 언어 번역 내장: `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar`. 새 언어는 `Locales/<culture>.yml`에 영어 원문 문자열과 번역을 매핑하여 추가하며, 소스 생성기가 빌드 시 테이블을 검증, 압축, 등록합니다.
 
 ## 빌드 및 테스트
 
@@ -94,6 +148,70 @@ dotnet test -c Release
 ```
 
 프레임 코덱, 다중 세그먼트, 잘못된 프레임, 프래그먼트 병합, BCD, 오디오 코덱, H.264, FLV/fMP4, 서버 프로토콜 모드, 언어 테이블을 검증합니다.
+
+## 아키텍처
+
+```
+JT1078 장치 (TCP/UDP:1078)
+    │
+    ▼
+NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
+    │  RTP 프래그먼트 병합
+    ▼
+JTMessage (RTP 메시지)
+    ├──► H264Decoder (비디오)
+    ├──► AudioCodecFactory (오디오)
+    │
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► MP3 오디오
+    ├──► 오디오 핸들러 ───────► AAC / PCM / WAV
+    │
+    ├──► DeviceSessionManager ──► 클러스터 명령 브로드캐스트 (IEventBus)
+    │
+    ▼
+플레이어 (flv.js / hls.js)
+```
+
+## 클러스터 배포
+
+서버는 다중 인스턴스 배포를 지원하며, 이벤트 버스를 통해 장치 명령을 인스턴스 간에 전달합니다:
+
+```csharp
+// 단독 실행(기본, 인메모리 EventBus)
+services.AddJT1078Gateway().AddTcp().AddHttp();
+
+// 클러스터(Redis/Stardust로 ICacheProvider 제공)
+// Redis EventBus가 자동 생성되며 명령이 모든 인스턴스로 브로드캐스트됩니다
+```
+
+REST API:
+- `POST /Command/Send`: 장치로 명령을 동기 전송하며, 장치를 보유한 인스턴스로 자동 라우팅
+- `POST /Command/SendAsync`: CancellationToken을 지원하는 비동기 명령 전송
+- `GET /Command/Devices`: 로컬에 연결된 장치 목록(TCP/UDP)
+
+## 라이브 엔드포인트
+
+| 엔드포인트 | 형식 | 전송 | 플레이어 |
+|----------|--------|-----------|--------|
+| `/live.flv` | FLV | HTTP / WebSocket | flv.js |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | 네이티브 MSE |
+| `/live.aac` | AAC | HTTP | 네이티브 오디오 |
+| `/live.pcm` | PCM | HTTP | 네이티브 오디오 |
+| `/live.wav` | WAV | HTTP | 네이티브 오디오 |
+| `/live.mp3` | MP3 | HTTP | 네이티브 오디오 |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
+
+## 프로토콜 참고 자료
+
+- JT/T 1078-2016, 도로 운송 차량 위성 측위 시스템 - 영상 통신 프로토콜
+- ISO 14496-12 (ISO BMFF)
+- Adobe Flash Video (FLV)
+
+## 감사의 말
+
+이 프로젝트의 설계와 구현은 오픈소스 프로젝트 [SmallChi/JT1078](https://github.com/SmallChi/JT1078)을 참고했습니다. 깊이 감사드립니다.
 
 ## 생태계 지도
 

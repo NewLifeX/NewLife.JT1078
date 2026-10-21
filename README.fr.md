@@ -18,74 +18,128 @@ Implémentation .NET du protocole de communication vidéo JT/T 1078 pour les sys
 
 ## Fonctionnalités
 
-- **Protocole RTP JT1078** : analyse et construction complètes avec 29 types de charge audio/vidéo
-- **Délimitation de trames** : découpage des paquets collés et analyse header-first basés sur `IMessageCodec` de NewLife.Core
-- **Fusion de fragments RTP** : mise en mémoire et fusion automatiques des fragments I/P/B
-- **Décodage audio** : G.711A, G.711U, IMA-ADPCM avec suppression de l'en-tête HiSilicon
-- **Analyse H.264** : découpage NAL, SPS/PPS, codes de début et octets de prévention
-- **Remuxage** : FLV et fMP4 en temps réel, sortie HTTP-FLV/WS-FLV, fMP4 et HLS
-- **Serveur** : TCP/UDP, points d'accès HTTP/WS, relecture et bus de commandes en cluster (IEventBus)
-- **NativeAOT** : protocole et tables de langue sans réflexion ; image native vérifiée en CI
-- **Localisation** : messages source en anglais, 10 traductions intégrées, repli sur l'anglais
+### Protocole
+- **Protocole RTP JT1078** : analyse et construction complètes des messages RTP avec 29 types de charge audio/vidéo
+- **Délimitation de trames** : découpage des paquets collés et analyse « en-tête d'abord » basées sur `IMessageCodec` de NewLife.Core
+- **Fusion de fragments RTP** : mise en mémoire tampon et fusion automatiques des fragments de trames I/P/B
+
+### Codecs audio et vidéo
+- **Décodage audio** : G.711A (A-law), G.711U (μ-law), IMA-ADPCM, avec suppression de l'en-tête HiSilicon
+- **Encodage AAC** : encodage AAC via FaacEncoder (P/Invoke)
+- **Analyse H.264** : découpage en unités NAL, analyse des SPS/PPS, gestion des codes de début et suppression des octets de prévention d'émulation
+
+### Remuxage de conteneurs
+- **Remuxage FLV** : conversion RTP vers HTTP-FLV / WebSocket-FLV en temps réel pour la lecture avec flv.js
+- **Remuxage fMP4** : sortie de segments CMAF/fMP4 avec les boîtes ISO BMFF principales
+
+### Serveur
+- **Service TCP** : serveur JT1078 TCP prêt à l'emploi, avec configuration du port et journalisation de débogage
+- **Service UDP** : transport UDP JT/T 1078 cohabitant avec TCP
+- **Streaming HTTP/WS** : points d'accès ASP.NET Core intégrés pour FLV/fMP4/AAC/PCM/WAV
+- **Relecture** : relecture historique audio/vidéo par SIM, canal et plage horaire
+- **Commandes d'appareil** : bus de commandes en cluster basé sur IEventBus, autonome ou cluster Redis
+
+### Gestion et intégration
+- **Présence des appareils** : suivi en temps réel des événements de connexion/déconnexion des terminaux
+- **Autorisation des flux** : authentification par jeton protégeant les points d'accès en direct
+- **Builder DI** : enregistrement fluide `AddJT1078Gateway().AddTcp().AddHttp()`
+- **IHostedService** : gestion automatique du cycle de vie ASP.NET Core
+- **NativeAOT** : protocole et tables de localisation sans réflexion ; image native vérifiée par test de fumée
+- **Localisation** : messages source en anglais, 10 traductions incluses et repli sur l'anglais
 
 ## Démarrage rapide
 
+### Installer les paquets NuGet
+
 ```bash
-dotnet add package NewLife.JT1078           # bibliothèque protocole (FLV/fMP4 inclus)
+dotnet add package NewLife.JT1078           # bibliothèque protocole principale (inclut le remuxage FLV/fMP4)
 dotnet add package NewLife.JT1078.Server    # serveur TCP/UDP + HLS/MP3
 ```
+
+### Analyser un message RTP
 
 ```csharp
 using System.Buffers;
 using NewLife.JT1078.Protocols;
 
+// Délimitation de trames : un message est produit dès l'arrivée de l'en-tête ; le corps est lié par la couche de trames
 var codec = new JTCodec();
 var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
 if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
+    // Examiner le type de charge
     if (msg.Type == AVTypes.H264)
     {
-        var frame = new H264Decoder().ParseAVFrame(msg);
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
     }
 }
 ```
 
+### Décodage audio
+
+```csharp
+using NewLife.Audio;
+
+var factory = new AudioCodecFactory();
+// Charge de l'appareil -> PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM -> G.711A
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
+```
+
+### Démarrer le serveur de streaming
+
 ```csharp
 using NewLife.JT1078.Server;
 
+// Option 1 : utilisation directe
 var server = new JT1078Server();
 server.Start();
 
-// Ou intégration ASP.NET Core
-builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
+// Option 2 : intégration ASP.NET Core
+builder.Services.AddJT1078Gateway()
+       .AddTcp()
+       .AddHttp();
 ```
 
 ## Paquets NuGet
 
-| Paquet | Description |
-|---|---|
-| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | Protocole + codecs + remuxage FLV/fMP4 |
-| NewLife.JT1078.Server | Serveur TCP/UDP + builder DI + HLS/MP3 |
+| Paquet | Description | NuGet |
+|---|---|---|
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | Protocole principal + codecs + remuxage FLV/fMP4 (Flv/FMp4 intégrés au cœur) | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | Serveur TCP/UDP + builder DI + encodage HLS/MP3 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## Native AOT
 
-La bibliothèque de protocole et le serveur en configuration par défaut prennent en charge NativeAOT et le trimming. Les analyseurs AOT/trim sont toujours actifs pour net8.0 et ultérieur, sans avertissement IL. Le projet `AotSmoke` publie une image native en CI avec `PublishAot=true` et exécute les codecs de trames et les tables de langue.
+La bibliothèque de protocole principale et le serveur en configuration par défaut prennent en charge NativeAOT et le trimming. Les analyseurs AOT/trim sont toujours activés pour les cibles net8.0 et ultérieures, sans aucun avertissement IL à la compilation. Le projet `AotSmoke` de ce dépôt publie une image native en CI avec `PublishAot=true` et exerce les codecs de trames, la sérialisation par réflexion des modèles, l'assemblage DI, l'assemblage du serveur et les recherches dans les tables de localisation.
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
 ./out/AotSmoke
 ```
 
+> Les plugins, le scripting dynamique et l'enregistrement par réflexion à l'exécution sortent du périmètre de prise en charge AOT (conformément à NewLife.Core).
+
 ## Localisation
 
-Les exceptions et les journaux partagent une table générée à la compilation. Elle suit `CultureInfo.CurrentUICulture` et revient à l'anglais si une traduction manque. Sans resx ni assembly satellite : une seule DLL, compatible AOT.
+Les exceptions et les journaux partagent une table de localisation générée à la compilation. Elle suit `CultureInfo.CurrentUICulture` et revient à l'anglais si une traduction manque. Sans resx ni assembly satellite : une seule DLL, sûre nativement pour AOT.
+
+| Paramètre | Rôle |
+|---|---|
+| `CultureInfo.CurrentUICulture` | Source de langue par défaut ; ASP.NET Core peut la changer par requête |
+| `Localization.Culture` | Force la langue des exceptions et du texte courant |
+| `Localization.LogCulture` | Langue du texte destiné aux développeurs (journaux, commentaires de configuration) |
 
 ```csharp
-Localization.Culture = new CultureInfo("fr");
+// Site entier en chinois
+Localization.Culture = new CultureInfo("zh-CN");
+
+// Service web respectant Accept-Language à chaque requête
 using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 ```
 
-Langues incluses : `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar`. Pour en ajouter une, renseignez `Locales/<culture>.yml`.
+Traductions incluses : `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko`, `ar` (10 traductions incluses). Pour en ajouter une, associez les chaînes source anglaises à leurs traductions dans `Locales/<culture>.yml` ; le générateur de source valide, compresse et enregistre la table à la compilation.
 
 ## Compilation et tests
 
@@ -93,11 +147,71 @@ Langues incluses : `zh-Hans`, `zh-Hant`, `es`, `de`, `ja`, `fr`, `pt`, `ru`, `ko
 dotnet test -c Release
 ```
 
-Les tests couvrent le codec de trames, les séquences multi-segments, les trames invalides, la fusion de fragments, le BCD, les codecs audio, H.264, FLV/fMP4, le mode protocole du serveur et les tables de langue.
+Les tests couvrent la délimitation et la construction de trames, les séquences multi-segments, les trames invalides, la fusion de fragments, la sérialisation BCD, les codecs audio, l'analyse H.264, l'empaquetage FLV/fMP4, le mode protocole du serveur et les tables de localisation.
 
-## Écosystème
+## Architecture
 
-La matrice complète des projets se trouve dans [README.md](README.md#ecosystem) (identique dans tous les dépôts NewLife).
+```
+Appareil JT1078 (TCP/UDP:1078)
+    │
+    ▼
+NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
+    │  fusion des fragments RTP
+    ▼
+JTMessage (message RTP)
+    ├──► H264Decoder (vidéo)
+    ├──► AudioCodecFactory (audio)
+    │
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► audio MP3
+    ├──► gestionnaires audio ─► AAC / PCM / WAV
+    │
+    ├──► DeviceSessionManager ──► diffusion des commandes en cluster (IEventBus)
+    │
+    ▼
+Lecteur (flv.js / hls.js)
+```
+
+## Déploiement en cluster
+
+Le serveur prend en charge le déploiement multi-instances et transfère les commandes d'appareil entre instances via un bus d'événements :
+
+```csharp
+// Autonome (par défaut, EventBus en mémoire)
+services.AddJT1078Gateway().AddTcp().AddHttp();
+
+// Cluster (fournir ICacheProvider via Redis/Stardust)
+// Un EventBus Redis est créé automatiquement et les commandes sont diffusées à toutes les instances
+```
+
+REST API :
+- `POST /Command/Send` : envoie une commande à un appareil de façon synchrone, routée automatiquement vers l'instance qui détient l'appareil
+- `POST /Command/SendAsync` : envoie une commande de façon asynchrone avec prise en charge de CancellationToken
+- `GET /Command/Devices` : liste les appareils connectés localement (TCP/UDP)
+
+## Points d'accès en direct
+
+| Point d'accès | Format | Transport | Lecteur |
+|----------|--------|-----------|--------|
+| `/live.flv` | FLV | HTTP / WebSocket | flv.js |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | MSE natif |
+| `/live.aac` | AAC | HTTP | audio natif |
+| `/live.pcm` | PCM | HTTP | audio natif |
+| `/live.wav` | WAV | HTTP | audio natif |
+| `/live.mp3` | MP3 | HTTP | audio natif |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
+
+## Références du protocole
+
+- JT/T 1078-2016, Systèmes de positionnement par satellite des véhicules de transport routier - Protocole de communication vidéo
+- ISO 14496-12 (ISO BMFF)
+- Adobe Flash Video (FLV)
+
+## Remerciements
+
+La conception et l'implémentation de ce projet s'inspirent du projet open source [SmallChi/JT1078](https://github.com/SmallChi/JT1078). Merci beaucoup.
 
 ## Carte de l'écosystème
 

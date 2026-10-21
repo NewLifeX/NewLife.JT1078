@@ -18,22 +18,45 @@ JT/T 1078 道路運輸車輛衛星定位系統視訊通訊協定的 .NET 實作�
 
 ## 功能特性
 
+### 協定層
 - **JT1078 RTP 協定**：完整的 RTP 封包解析與建構，支援 29 種音視訊編碼類型
 - **訊框定界**：基於 NewLife.Core `IMessageCodec` 的黏包/拆包與標頭先行解析
 - **RTP 分包合併**：自動快取並合併 I/P/B 訊框的分包
-- **音訊解碼**：G.711A、G.711U、IMA-ADPCM，支援海思晶片標頭剝離
+
+### 音視訊編解碼
+- **音訊解碼**：G.711A (A-law)、G.711U (μ-law)、IMA-ADPCM，支援海思晶片標頭剝離
+- **AAC 編碼**：基於 FaacEncoder (P/Invoke) 的 AAC 編碼
 - **H.264 解析**：NAL 單元分割、SPS/PPS 解析、起始碼處理、競爭位元組剝離
-- **FLV/fMP4 轉封裝**：即時轉換為 HTTP-FLV / WebSocket-FLV / fMP4 / HLS
-- **服務端**：TCP/UDP 雙棧、HTTP/WS 直播端點、錄影回放、IEventBus 叢集命令下發
+
+### 容器轉封裝
+- **FLV 轉封裝**：將 RTP 流即時轉換為 HTTP-FLV / WebSocket-FLV，支援 flv.js 播放
+- **fMP4 轉封裝**：CMAF/fMP4 分段輸出，支援 ISO BMFF 核心 Box 類型
+
+### 服務端
+- **TCP 服務**：開箱即用的 JT1078 TCP 伺服器，支援連接埠設定、除錯日誌
+- **UDP 服務**：支援 JT/T 1078 UDP 傳輸模式，與 TCP 雙棧共存
+- **HTTP/WS 直播**：內建 ASP.NET Core 端點，支援 FLV/fMP4/AAC/PCM/WAV 格式
+- **錄影回放**：支援依 SIM、通道與時間範圍的歷史音視訊回放
+- **裝置命令**：基於 IEventBus 的叢集命令下發匯流排，支援單機/Redis 叢集模式
+
+### 管理與整合
+- **裝置線上狀態**：即時追蹤終端連線/斷開事件
+- **串流授權**：Token 認證保護直播端點
+- **DI 建構器**：`AddJT1078Gateway().AddTcp().AddHttp()` 鏈式註冊
+- **IHostedService**：ASP.NET Core 生命週期自動管理
 - **NativeAOT**：核心協定與多語言詞表零反射，原生映像建置通過冒煙驗證
 - **多語言**：例外與日誌以英文為源文，內建 10 種語言譯文，缺翻譯自動回退英文
 
 ## 快速開始
 
+### 安裝 NuGet 套件
+
 ```bash
 dotnet add package NewLife.JT1078           # 核心協定庫（含 FLV/fMP4 轉封裝）
 dotnet add package NewLife.JT1078.Server    # TCP/UDP 伺服器 + HLS/MP3
 ```
+
+### 解析 RTP 封包
 
 ```csharp
 using System.Buffers;
@@ -44,6 +67,7 @@ var codec = new JTCodec();
 var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
 if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
+    // 檢視編碼類型
     if (msg.Type == AVTypes.H264)
     {
         var frame = new H264Decoder().ParseAVFrame(msg);
@@ -51,22 +75,39 @@ if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 }
 ```
 
+### 音訊解碼
+
+```csharp
+using NewLife.Audio;
+
+var factory = new AudioCodecFactory();
+// 裝置負載 → PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM → G.711A
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
+```
+
+### 啟動串流伺服器
+
 ```csharp
 using NewLife.JT1078.Server;
 
+// 方式一：直接使用
 var server = new JT1078Server();
 server.Start();
 
-// 或 ASP.NET Core 整合
-builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
+// 方式二：ASP.NET Core 整合
+builder.Services.AddJT1078Gateway()
+       .AddTcp()
+       .AddHttp();
 ```
 
 ## NuGet 套件
 
-| 套件 | 說明 |
-|---|---|
-| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | 核心協定 + 編解碼 + FLV/fMP4 轉封裝 |
-| NewLife.JT1078.Server | TCP/UDP 伺服器 + DI 建構器 + HLS/MP3 編碼 |
+| 套件 | 說明 | NuGet |
+|---------|-------------|-------|
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | 核心協定 + 編解碼 + FLV/fMP4 轉封裝（Flv/FMp4 已合併入核心） | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | TCP/UDP 伺服器 + DI 建構器 + HLS/MP3 編碼 | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## Native AOT
 
@@ -77,16 +118,27 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=tr
 ./out/AotSmoke
 ```
 
+> 外掛、動態腳本與執行階段反射註冊不在 AOT 支援範圍內（與 NewLife.Core 邊界一致）。
+
 ## 多語言本地化
 
 例外與日誌共用一套編譯期產生的多語言詞表，預設跟隨 `CultureInfo.CurrentUICulture`，缺翻譯自動回退英文；不依賴 resx 與衛星組件，單一 DLL、原生支援 AOT。
 
+| 設定 | 作用 |
+|---|---|
+| `CultureInfo.CurrentUICulture` | 預設語言來源，ASP.NET Core 可依請求變化 |
+| `Localization.Culture` | 強制指定例外與一般文字語言 |
+| `Localization.LogCulture` | 開發者可見文字（日誌、設定註解）的語言 |
+
 ```csharp
+// 全站繁體中文
 Localization.Culture = new CultureInfo("zh-TW");
+
+// Web 服務依 Accept-Language 識別各請求語言
 using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 ```
 
-內建 `zh-Hans`、`zh-Hant`、`es`、`de`、`ja`、`fr`、`pt`、`ru`、`ko`、`ar` 十種譯文；新增語言只需在 `Locales/<culture>.yml` 補充英文源文到譯文的對應。
+內建 `zh-Hans`、`zh-Hant`、`es`、`de`、`ja`、`fr`、`pt`、`ru`、`ko`、`ar` 十種譯文；新增語言只需在 `Locales/<culture>.yml` 補充英文源文到譯文的對應，來源產生器在建置期完成校驗、壓縮與註冊。
 
 ## 建置與測試
 
@@ -95,6 +147,70 @@ dotnet test -c Release
 ```
 
 測試涵蓋訊框編解碼、多段序列、損壞訊框、訊息分包合併、BCD 序列化、音訊編解碼、H.264 解析、FLV/fMP4 封裝、服務端協定模式與多語言詞表。
+
+## 架構
+
+```
+JT1078 終端裝置 (TCP/UDP:1078)
+    │
+    ▼
+NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
+    │  RTP 分包合併
+    ▼
+JTMessage (RTP 封包)
+    ├──► H264Decoder (視訊)
+    ├──► AudioCodecFactory (音訊)
+    │
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► MP3 音訊
+    ├──► 音訊 Handler ────────► AAC / PCM / WAV
+    │
+    ├──► DeviceSessionManager ──► 叢集命令廣播 (IEventBus)
+    │
+    ▼
+播放器 (flv.js / hls.js)
+```
+
+## 叢集部署
+
+服務端支援多實例部署，透過事件匯流排將裝置命令轉發到其他實例：
+
+```csharp
+// 單機模式（預設，記憶體 EventBus）
+services.AddJT1078Gateway().AddTcp().AddHttp();
+
+// 叢集模式（透過 Redis/Stardust 提供 ICacheProvider）
+// 自動建立 Redis EventBus，命令廣播到所有實例
+```
+
+REST API：
+- `POST /Command/Send`：同步向裝置發送命令，自動路由到裝置所在實例
+- `POST /Command/SendAsync`：非同步向裝置發送命令，支援 CancellationToken
+- `GET /Command/Devices`：列出本地已連線的裝置（TCP/UDP）
+
+## 直播端點
+
+| 端點 | 格式 | 傳輸 | 播放器 |
+|----------|--------|-----------|--------|
+| `/live.flv` | FLV | HTTP / WebSocket | flv.js |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | 原生 MSE |
+| `/live.aac` | AAC | HTTP | 原生音訊 |
+| `/live.pcm` | PCM | HTTP | 原生音訊 |
+| `/live.wav` | WAV | HTTP | 原生音訊 |
+| `/live.mp3` | MP3 | HTTP | 原生音訊 |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
+
+## 協定參考
+
+- JT/T 1078-2016《道路運輸車輛衛星定位系統 視訊通訊協定》
+- ISO 14496-12 (ISO BMFF)
+- Adobe Flash Video (FLV)
+
+## 致謝
+
+本專案在設計與實作過程中參考了 [SmallChi/JT1078](https://github.com/SmallChi/JT1078) 開源專案，特此致謝。
 
 ## 生態版圖
 

@@ -18,74 +18,128 @@ JT/T 1078（道路輸送車両衛星測位システムの映像通信プロト�
 
 ## 機能
 
-- **JT1078 RTP プロトコル**: 29 種類の音声・映像タイプに対応した RTP メッセージの解析と構築
-- **フレーム区切り**: NewLife.Core `IMessageCodec` によるスティッキーパケット分割とヘッダー先行解析
+### プロトコル
+- **JT1078 RTP プロトコル**: 29 種類の音声・映像ペイロードタイプに対応した RTP メッセージの完全な解析と構築
+- **フレーム区切り**: NewLife.Core `IMessageCodec` を基盤としたスティッキーパケット分割とヘッダー先行解析
 - **RTP フラグメント結合**: I/P/B フレームのフラグメントを自動的にバッファリングして結合
-- **音声デコード**: G.711A、G.711U、IMA-ADPCM（HiSilicon ヘッダー除去対応）
-- **H.264 解析**: NAL 分割、SPS/PPS、スタートコード、エミュレーション防止バイトの除去
-- **リマックス**: リアルタイム FLV / fMP4、HTTP-FLV / WS-FLV / fMP4 / HLS 出力
-- **サーバー**: TCP/UDP、HTTP/WS エンドポイント、録画再生、IEventBus によるクラスタコマンド配信
-- **NativeAOT**: プロトコルと言語テーブルはリフレクション不要、CI のスモークテストでネイティブイメージを検証
+
+### 音声・映像コーデック
+- **音声デコード**: G.711A（A-law）、G.711U（μ-law）、IMA-ADPCM。HiSilicon ヘッダーの除去に対応
+- **AAC エンコード**: FaacEncoder（P/Invoke）による AAC エンコード
+- **H.264 解析**: NAL ユニット分割、SPS/PPS 解析、スタートコード処理、エミュレーション防止バイトの除去
+
+### コンテナリマックス
+- **FLV リマックス**: RTP をリアルタイムに HTTP-FLV / WebSocket-FLV へ変換し、flv.js で再生可能
+- **fMP4 リマックス**: 主要な ISO BMFF Box に対応した CMAF/fMP4 セグメント出力
+
+### サーバー
+- **TCP サービス**: ポート設定とデバッグログを備えた、すぐに使える JT1078 TCP サーバー
+- **UDP サービス**: TCP と共存する JT/T 1078 UDP トランスポート
+- **HTTP/WS ライブ配信**: FLV/fMP4/AAC/PCM/WAV に対応する ASP.NET Core エンドポイントを内蔵
+- **録画再生**: SIM・チャンネル・時間範囲を指定した過去の音声・映像の再生
+- **デバイスコマンド**: IEventBus を基盤としたクラスタコマンドバス。単体構成または Redis クラスタに対応
+
+### 管理と統合
+- **デバイス在席状況**: 端末の接続・切断イベントをリアルタイムに追跡
+- **ストリーム認証**: ライブエンドポイントを保護するトークン認証
+- **DI ビルダー**: `AddJT1078Gateway().AddTcp().AddHttp()` による流暢な登録
+- **IHostedService**: ASP.NET Core のライフサイクルを自動管理
+- **NativeAOT**: リフレクション不要のプロトコルと言語テーブル。ネイティブイメージはスモークテストで検証
 - **多言語**: 英語を原文とし 10 言語の翻訳を内蔵、未翻訳時は英語にフォールバック
 
 ## クイックスタート
 
+### NuGet パッケージのインストール
+
 ```bash
-dotnet add package NewLife.JT1078           # コアプロトコル（FLV/fMP4 を含む）
+dotnet add package NewLife.JT1078           # コアプロトコルライブラリ（FLV/fMP4 リマックスを含む）
 dotnet add package NewLife.JT1078.Server    # TCP/UDP サーバー + HLS/MP3
 ```
+
+### RTP メッセージの解析
 
 ```csharp
 using System.Buffers;
 using NewLife.JT1078.Protocols;
 
+// フレーム区切り：ヘッダーが揃った時点でメッセージを生成し、ボディはフレーム層がバインドします
 var codec = new JTCodec();
 var result = codec.TryParse(new ReadOnlySequence<Byte>(data));
 if (result is { Invalid: false } rs && rs.Message is JTMessage msg)
 {
+    // ペイロードタイプを確認
     if (msg.Type == AVTypes.H264)
     {
-        var frame = new H264Decoder().ParseAVFrame(msg);
+        var decoder = new H264Decoder();
+        var frame = decoder.ParseAVFrame(msg);
     }
 }
 ```
 
+### 音声デコード
+
+```csharp
+using NewLife.Audio;
+
+var factory = new AudioCodecFactory();
+// デバイスのペイロード → PCM
+var pcm = factory.ToPcm(NewLife.Audio.AVTypes.ADPCMA, packet);
+// PCM → G.711A
+var g711a = factory.FromPcm(NewLife.Audio.AVTypes.G711A, pcm);
+```
+
+### ストリーミングサーバーの起動
+
 ```csharp
 using NewLife.JT1078.Server;
 
+// 方法 1：直接使用
 var server = new JT1078Server();
 server.Start();
 
-// ASP.NET Core 統合
-builder.Services.AddJT1078Gateway().AddTcp().AddHttp();
+// 方法 2：ASP.NET Core 統合
+builder.Services.AddJT1078Gateway()
+       .AddTcp()
+       .AddHttp();
 ```
 
 ## NuGet パッケージ
 
-| パッケージ | 説明 |
-|---|---|
-| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | プロトコル + コーデック + FLV/fMP4 リマックス |
-| NewLife.JT1078.Server | TCP/UDP サーバー + DI ビルダー + HLS/MP3 |
+| パッケージ | 説明 | NuGet |
+|---------|-------------|-------|
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | コアプロトコル + コーデック + FLV/fMP4 リマックス（Flv/FMp4 はコアに統合） | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.svg)](https://www.nuget.org/packages/NewLife.JT1078) |
+| NewLife.JT1078.Server | TCP/UDP サーバー + DI ビルダー + HLS/MP3 エンコード | [![NuGet](https://img.shields.io/nuget/v/NewLife.JT1078.Server.svg)](https://www.nuget.org/packages/NewLife.JT1078.Server) |
 
 ## Native AOT
 
-コアプロトコルライブラリと既定構成のサーバーは NativeAOT とトリミングに対応します。net8.0 以降では AOT/トリムアナライザーが常時有効で、ビルド時の IL 警告はゼロです。`AotSmoke` プロジェクトは CI で `PublishAot=true` によりネイティブイメージを公開し、フレームコーデックと言語テーブルを検証します。
+コアプロトコルライブラリと既定構成のサーバーは NativeAOT とトリミングに対応します。net8.0 以降のターゲットでは AOT/トリムアナライザーが常時有効で、ビルド時の IL 警告はゼロです。本リポジトリの `AotSmoke` プロジェクトは CI で `PublishAot=true` によりネイティブイメージを公開し、フレームコーデック、モデルのリフレクションシリアライズ、DI の組み立て、サーバーの組み立て、言語テーブルの検索を実行します。
 
 ```bash
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -p:PublishAot=true -o out
 ./out/AotSmoke
 ```
 
+> プラグイン、動的スクリプト、実行時リフレクション登録は AOT サポートの対象外です（NewLife.Core と同一の境界）。
+
 ## ローカライズ
 
-例外とログはコンパイル時に生成される共通の言語テーブルを使用します。既定では `CultureInfo.CurrentUICulture` に従い、翻訳がない場合は英語にフォールバックします。resx やサテライトアセンブリは不要で、単一 DLL・AOT 対応です。
+例外とログはコンパイル時に生成される共通の言語テーブルを使用します。既定では `CultureInfo.CurrentUICulture` に従い、翻訳がない場合は英語にフォールバックします。resx やサテライトアセンブリは不要で、単一 DLL・ネイティブ AOT 対応です。
+
+| 設定 | 用途 |
+|---|---|
+| `CultureInfo.CurrentUICulture` | 既定の言語ソース。ASP.NET Core ではリクエストごとに変更可能 |
+| `Localization.Culture` | 例外と通常テキストの言語を強制指定 |
+| `Localization.LogCulture` | 開発者向けテキスト（ログ、構成コメント）の言語 |
 
 ```csharp
+// サイト全体を日本語に
 Localization.Culture = new CultureInfo("ja");
+
+// Web サービスがリクエストごとに Accept-Language に従う場合
 using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 ```
 
-同梱言語: `zh-Hans`、`zh-Hant`、`es`、`de`、`ja`、`fr`、`pt`、`ru`、`ko`、`ar`。追加する場合は `Locales/<culture>.yml` に英語原文と訳文を記述します。
+同梱する 10 言語の翻訳: `zh-Hans`、`zh-Hant`、`es`、`de`、`ja`、`fr`、`pt`、`ru`、`ko`、`ar`。言語を追加するには `Locales/<culture>.yml` に英語原文と訳文の対応を記述します。ソースジェネレーターがビルド時に検証・圧縮・登録を行います。
 
 ## ビルドとテスト
 
@@ -93,7 +147,71 @@ using var culture = RequestCultureScope.Create(Request.Headers.AcceptLanguage);
 dotnet test -c Release
 ```
 
-フレームコーデック、複数セグメント、不正フレーム、フラグメント結合、BCD、音声コーデック、H.264、FLV/fMP4、サーバーのプロトコルモード、言語テーブルを検証します。
+テストは、フレームコーデックの定界・構築、複数セグメントのシーケンス、不正フレーム、メッセージのフラグメント結合、BCD シリアライズ、音声コーデック、H.264 解析、FLV/fMP4 パッケージング、サーバーのプロトコルモード、言語テーブルを対象とします。
+
+## アーキテクチャ
+
+```
+JT1078 端末デバイス (TCP/UDP:1078)
+    │
+    ▼
+NewLife.JT1078.Server ─── JT1078Session / JT1078UdpSession
+    │  RTP フラグメント結合
+    ▼
+JTMessage (RTP メッセージ)
+    ├──► H264Decoder (映像)
+    ├──► AudioCodecFactory (音声)
+    │
+    ├──► FlvEncoder ──────────► HTTP-FLV / WS-FLV
+    ├──► FMp4Encoder ────────► fMP4
+    ├──► HlsHandler / TSMuxer ──► HLS (/hls.m3u8)
+    ├──► Mp3Handler ─────────► MP3 音声
+    ├──► 音声ハンドラー ──────► AAC / PCM / WAV
+    │
+    ├──► DeviceSessionManager ──► クラスタコマンドブロードキャスト (IEventBus)
+    │
+    ▼
+プレイヤー (flv.js / hls.js)
+```
+
+## クラスタ展開
+
+サーバーはマルチインスタンス構成に対応し、イベントバスを通じてデバイスコマンドをインスタンス間で転送します：
+
+```csharp
+// 単体構成（既定、インメモリ EventBus）
+services.AddJT1078Gateway().AddTcp().AddHttp();
+
+// クラスタ構成（Redis/Stardust 経由で ICacheProvider を提供）
+// Redis EventBus が自動的に作成され、コマンドがすべてのインスタンスへブロードキャストされます
+```
+
+REST API：
+- `POST /Command/Send`：デバイスへコマンドを同期的に送信し、デバイスを保持するインスタンスへ自動的にルーティングします
+- `POST /Command/SendAsync`：CancellationToken に対応した非同期コマンド送信
+- `GET /Command/Devices`：ローカルに接続中のデバイス（TCP/UDP）を一覧表示します
+
+## ライブエンドポイント
+
+| エンドポイント | 形式 | トランスポート | プレイヤー |
+|----------|--------|-----------|--------|
+| `/live.flv` | FLV | HTTP / WebSocket | flv.js |
+| `/live.mp4` | fMP4 | HTTP / WebSocket | ネイティブ MSE |
+| `/live.aac` | AAC | HTTP | ネイティブオーディオ |
+| `/live.pcm` | PCM | HTTP | ネイティブオーディオ |
+| `/live.wav` | WAV | HTTP | ネイティブオーディオ |
+| `/live.mp3` | MP3 | HTTP | ネイティブオーディオ |
+| `/hls.m3u8` + `/hls.ts` | HLS (MPEG-TS) | HTTP | hls.js |
+
+## プロトコル参考資料
+
+- JT/T 1078-2016 道路輸送車両衛星測位システム - 映像通信プロトコル
+- ISO 14496-12 (ISO BMFF)
+- Adobe Flash Video (FLV)
+
+## 謝辞
+
+本プロジェクトの設計と実装にあたっては、オープンソースプロジェクト [SmallChi/JT1078](https://github.com/SmallChi/JT1078) を参考にしました。ここに深く感謝いたします。
 
 ## エコシステムマップ
 
