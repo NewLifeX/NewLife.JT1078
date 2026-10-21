@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using NewLife;
 using NewLife.JT1078.Protocols;
 using Xunit;
@@ -59,8 +60,8 @@ public class LocalizationTests
     [Fact(DisplayName = "服务端日志词条按语言翻译")]
     public void ServerLog_Translated()
     {
-        // 触发服务端程序集的模块初始化，完成词表注册
-        _ = typeof(NewLife.JT1078.Server.JT1078Server);
+        // 强制运行服务端程序集的模块初始化器，完成词表注册；仅写 typeof(T) 可能被 JIT 优化掉
+        RuntimeHelpers.RunModuleConstructor(typeof(NewLife.JT1078.Server.JT1078Server).Assembly.ManifestModule.ModuleHandle);
 
         var old = Localization.Culture;
         try
