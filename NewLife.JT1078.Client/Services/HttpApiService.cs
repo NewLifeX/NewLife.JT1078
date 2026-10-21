@@ -36,7 +36,7 @@ public class HttpApiService : IDisposable
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"查询设备列表失败: {ex.Message}", ex);
+            throw new InvalidOperationException(Localization.Translate("Failed to query device list: {0}", ex.Message), ex);
         }
     }
 

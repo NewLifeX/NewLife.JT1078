@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0;net6.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>NewLife.JT1078.Server</RootNamespace>
-    <AssemblyTitle>JT1078 TCP服务端</AssemblyTitle>
-    <Description>基于NewLife.Net的JT1078 TCP服务端，支持RTP分包合并和设备会话管理</Description>
+    <AssemblyTitle>NewLife JT1078 Server</AssemblyTitle>
+    <Description>JT/T 1078 video streaming server built on NewLife.Net: RTP fragment merging, device session management, live endpoints, record playback and cluster command bus.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2022-2026 新生命开发团队</Copyright>
     <VersionPrefix>1.0</VersionPrefix>
@@ -31,6 +31,7 @@
 
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>
+    <PackageDescription>JT/T 1078 video streaming server built on NewLife.Net: RTP fragment merging, device session management, live endpoints, record playback and cluster command bus. 基于 NewLife.Net 的 JT/T 1078 视频流媒体服务端：RTP 分片合并、设备会话管理、直播端点、录像回放与集群命令总线。</PackageDescription>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://newlifex.com/iot</PackageProjectUrl>
     <PackageIcon>leaf.png</PackageIcon>
@@ -43,7 +44,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>README.nuget.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,7 +62,7 @@
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <None Include="..\README.md" Pack="True" PackagePath="\" />
+    <None Include="..\README.nuget.md" Pack="True" PackagePath="\" />
   </ItemGroup>
 
 </Project>

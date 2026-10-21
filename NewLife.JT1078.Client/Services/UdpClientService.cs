@@ -69,7 +69,7 @@ public class UdpClientService : IDisposable
     public async Task SendAsync(JTMessage message)
     {
         if (_udpClient == null)
-            throw new InvalidOperationException("未连接到服务器");
+            throw new InvalidOperationException(Localization.Translate("Not connected to the server."));
 
         var packet = message.ToPacket();
         var data = packet.GetSpan().ToArray();
@@ -80,7 +80,7 @@ public class UdpClientService : IDisposable
     public async Task SendRawAsync(Byte[] data)
     {
         if (_udpClient == null)
-            throw new InvalidOperationException("未连接到服务器");
+            throw new InvalidOperationException(Localization.Translate("Not connected to the server."));
 
         await _udpClient.SendAsync(data);
     }

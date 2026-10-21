@@ -2,3 +2,6 @@
 "The message must be JTMessage.": "A mensagem deve ser do tipo JTMessage."
 "JTMessage.Append need first packet": "JTMessage.Append requer o primeiro pacote"
 "The message body is streaming and cannot be built as a whole frame.": "O corpo da mensagem está em streaming e não pode ser construído como um quadro completo."
+
+"NewLife JT1078 Protocol": "Núcleo do protocolo NewLife JT1078"
+"JT/T 1078 video communication protocol core: RTP message parsing, audio/video codecs, H.264 parsing and FLV/fMP4 remuxing.": "Implementação central do protocolo de comunicação de vídeo JT/T 1078: análise de mensagens RTP, codecs de áudio/vídeo, análise H.264 e remultiplexação FLV/fMP4."

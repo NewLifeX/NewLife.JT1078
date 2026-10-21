@@ -28,3 +28,6 @@
 "FileCache.Finish {0}": "FileCache concluído {0}"
 "FileCache.Read {0}": "FileCache leitura {0}"
 "FileCache.OpenRead {0}": "FileCache abertura de leitura {0}"
+
+"NewLife JT1078 Server": "Servidor NewLife JT1078"
+"JT/T 1078 video streaming server built on NewLife.Net: RTP fragment merging, device session management, live endpoints, record playback and cluster command bus.": "Servidor de streaming de vídeo JT/T 1078 baseado em NewLife.Net: fusão de fragmentos RTP, gerenciamento de sessões de dispositivos, endpoints ao vivo, reprodução de gravações e barramento de comandos em cluster."

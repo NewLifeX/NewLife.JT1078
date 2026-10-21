@@ -2,3 +2,6 @@
 "The message must be JTMessage.": "訊息必須是 JTMessage 類型。"
 "JTMessage.Append need first packet": "JTMessage.Append 需要首包"
 "The message body is streaming and cannot be built as a whole frame.": "訊息體為串流讀取，無法建構整幀。"
+
+"NewLife JT1078 Protocol": "NewLife JT1078 協定核心"
+"JT/T 1078 video communication protocol core: RTP message parsing, audio/video codecs, H.264 parsing and FLV/fMP4 remuxing.": "JT/T 1078 視訊通訊協定核心實作：RTP 封包解析、音視訊編解碼、H.264 解析與 FLV/fMP4 轉封裝."

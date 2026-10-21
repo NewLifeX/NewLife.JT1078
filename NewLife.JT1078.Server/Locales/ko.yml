@@ -28,3 +28,6 @@
 "FileCache.Finish {0}": "FileCache 완료 {0}"
 "FileCache.Read {0}": "FileCache 읽기 {0}"
 "FileCache.OpenRead {0}": "FileCache 읽기 열기 {0}"
+
+"NewLife JT1078 Server": "NewLife JT1078 서버"
+"JT/T 1078 video streaming server built on NewLife.Net: RTP fragment merging, device session management, live endpoints, record playback and cluster command bus.": "NewLife.Net 기반 JT/T 1078 비디오 스트리밍 서버: RTP 프래그먼트 병합, 장치 세션 관리, 라이브 엔드포인트, 녹화 재생, 클러스터 명령 버스."

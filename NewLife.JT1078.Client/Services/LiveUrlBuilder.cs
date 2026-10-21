@@ -27,8 +27,8 @@ public static class LiveUrlBuilder
     public static String BuildHttpUrl(ConnectionConfig config, String format, String sim, Int32 channel)
     {
         if (config == null) throw new ArgumentNullException(nameof(config));
-        if (String.IsNullOrWhiteSpace(sim)) throw new ArgumentException("SIM 卡号不能为空", nameof(sim));
-        if (channel < 1) throw new ArgumentOutOfRangeException(nameof(channel), "逻辑通道号必须大于 0");
+        if (String.IsNullOrWhiteSpace(sim)) throw new ArgumentException(Localization.Translate("SIM number cannot be empty."), nameof(sim));
+        if (channel < 1) throw new ArgumentOutOfRangeException(nameof(channel), Localization.Translate("Logical channel number must be greater than 0."));
 
         var fmt = Normalize(format);
         var path = fmt == "hls" ? "hls.m3u8" : $"live.{fmt}";

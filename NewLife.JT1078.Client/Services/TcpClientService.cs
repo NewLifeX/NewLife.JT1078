@@ -72,7 +72,7 @@ public class TcpClientService : IDisposable
     public async Task SendAsync(JTMessage message)
     {
         if (_stream == null)
-            throw new InvalidOperationException("未连接到服务器");
+            throw new InvalidOperationException(Localization.Translate("Not connected to the server."));
 
         var packet = message.ToPacket();
         var data = packet.GetSpan().ToArray();
@@ -84,7 +84,7 @@ public class TcpClientService : IDisposable
     public async Task SendRawAsync(Byte[] data)
     {
         if (_stream == null)
-            throw new InvalidOperationException("未连接到服务器");
+            throw new InvalidOperationException(Localization.Translate("Not connected to the server."));
 
         await _stream.WriteAsync(data);
         await _stream.FlushAsync();

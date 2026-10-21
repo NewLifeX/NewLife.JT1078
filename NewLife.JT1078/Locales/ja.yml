@@ -2,3 +2,6 @@
 "The message must be JTMessage.": "メッセージは JTMessage 型である必要があります。"
 "JTMessage.Append need first packet": "JTMessage.Append には先頭パケットが必要です"
 "The message body is streaming and cannot be built as a whole frame.": "メッセージ本文がストリーミングのため、完全なフレームを構築できません。"
+
+"NewLife JT1078 Protocol": "NewLife JT1078 プロトコルコア"
+"JT/T 1078 video communication protocol core: RTP message parsing, audio/video codecs, H.264 parsing and FLV/fMP4 remuxing.": "JT/T 1078 ビデオ通信プロトコルの中核実装：RTP メッセージ解析、音声・映像コーデック、H.264 解析、FLV/fMP4 リマックス。"
