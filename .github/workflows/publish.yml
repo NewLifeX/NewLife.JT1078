@@ -37,7 +37,7 @@ jobs:
         dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
         dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
     - name: Verify packages
-      run: pwsh -File ./check-packages.ps1
+      run: pwsh -File ./tools/check-packages.ps1
     - name: Publish GitHub Packages
       # GitHub Packages 不支持符号包，显式跳过 snupkg
       run: |

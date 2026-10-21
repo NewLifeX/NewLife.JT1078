@@ -33,6 +33,9 @@ jobs:
           10.x
         cache: true
         cache-dependency-path: '**/*.csproj'
+    - name: Check locales
+      shell: pwsh
+      run: pwsh -File ./tools/check-locales-all.ps1
     - name: Build
       shell: pwsh
       run: |
@@ -102,7 +105,7 @@ jobs:
         dotnet pack NewLife.JT1078.Server/NewLife.JT1078.Server.csproj -c Release -o out
     - name: Verify nupkg assets
       shell: pwsh
-      run: pwsh -File ./check-packages.ps1
+      run: pwsh -File ./tools/check-packages.ps1
     - name: Upload packages
       if: always()
       uses: actions/upload-artifact@v4

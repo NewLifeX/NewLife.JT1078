@@ -6,7 +6,7 @@
 .PARAMETER Path
   nupkg/snupkg 所在目录，默认 out。
 .EXAMPLE
-  pwsh -File ./check-packages.ps1
+  pwsh -File ./tools/check-packages.ps1
 #>
 param(
     [String]$Path = 'out'
@@ -46,7 +46,7 @@ foreach ($id in $expected.Keys) {
         $extra = $actual | Where-Object { $expected[$id] -notcontains $_ }
         if ($missing) { throw "$id 缺少目标框架资产：$($missing -join ', ')" }
         if ($extra) { throw "$id 出现未约定的目标框架资产：$($extra -join ', ')（确认新增时同步本脚本、README 与架构设计）" }
-        foreach ($required in @('README.md', 'leaf.png', "$id.nuspec")) {
+        foreach ($required in @('README.nuget.md', 'leaf.png', "$id.nuspec")) {
             if ($entries -notcontains $required) { throw "$id 包缺少 $required" }
         }
     }
