@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <None Include="..\Readme.MD" Pack="True" PackagePath="\" />
+    <None Include="..\README.md" Pack="True" PackagePath="\" />
   </ItemGroup>
 
 </Project>
