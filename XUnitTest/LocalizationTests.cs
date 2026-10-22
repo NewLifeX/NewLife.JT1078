@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using NewLife;
 using NewLife.JT1078.Protocols;
 using NewLife.JT1078.Server;
+using NewLife.Log;
 using Xunit;
 
 namespace XUnitTest;
@@ -79,6 +80,36 @@ public class LocalizationTests
         {
             WithCulture(name, () => Assert.NotEqual(key, Localization.Translate(key)));
         }
+    }
+
+    [Fact(DisplayName = "日志链路：InfoPrefixed 按日志语言翻译并保留前缀")]
+    public void LogPipeline()
+    {
+        var prev = Localization.LogCulture;
+        var logger = new MemoryLogger();
+        try
+        {
+            Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");
+
+            logger.Info("JT1078 server started on port {0}", 1078);
+            logger.InfoPrefixed("DeviceSessionManager", "Register device session {0}", "SIM-1");
+
+            Assert.Contains("服务端已启动", logger.Messages[0]);
+            Assert.Contains("1078", logger.Messages[0]);
+            Assert.Contains("DeviceSessionManager", logger.Messages[1]);
+            Assert.Contains("注册设备会话", logger.Messages[1]);
+        }
+        finally
+        {
+            Localization.LogCulture = prev;
+        }
+    }
+
+    private sealed class MemoryLogger : Logger
+    {
+        public List<String> Messages { get; } = [];
+
+        protected override void OnWrite(LogLevel level, String format, params Object?[] args) => Messages.Add(Format(format, args));
     }
 
     [Fact(DisplayName = "占位符：全部语言格式化不抛异常且保留参数")]
