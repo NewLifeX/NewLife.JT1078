@@ -36,6 +36,12 @@ jobs:
     - name: Check locales
       shell: pwsh
       run: pwsh -File ./tools/check-locales-all.ps1
+    - name: Check README languages
+      shell: pwsh
+      run: pwsh -File ./tools/sync-readme-languages.ps1 -Check
+    - name: Check README package
+      shell: pwsh
+      run: pwsh -File ./tools/sync-readme-package.ps1 -Check
     - name: Build
       shell: pwsh
       run: |

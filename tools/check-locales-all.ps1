@@ -9,7 +9,7 @@ $projects = @("NewLife.JT1078", "NewLife.JT1078.Server", "NewLife.JT1078.Web")
 $failed = 0
 foreach ($project in $projects) {
     Write-Host "=== $project ==="
-    & pwsh -NoProfile -File $script -LocaleDir (Join-Path $root "$project\Locales") -SourceDir (Join-Path $root $project)
+    & pwsh -NoProfile -File $script -LocaleDir (Join-Path (Join-Path $root $project) "Locales") -SourceDir (Join-Path $root $project)
     if ($LASTEXITCODE -ne 0) { $failed++ }
 }
 

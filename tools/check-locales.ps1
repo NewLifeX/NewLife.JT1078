@@ -179,7 +179,7 @@ if (!$SkipOrphan) {
     } | Where-Object { Test-Path $_ })
 
     $sourceText = ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Include *.cs, *.csproj } |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin|Locales)\\' } |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|Locales)[\\/]' } |
         ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 
     $orphans = @()
@@ -201,7 +201,7 @@ if (!$SkipOrphan) {
     $callPattern = '(?:L\.T|L\.TLog|Localization\.Translate(?:ForLog)?)\s*\(\s*(?:[A-Za-z_][\w\.]*\s*,\s*)?"((?:[^"\\]|\\.)*)"'
     $missingMessages = [Collections.Generic.SortedSet[String]]::new([StringComparer]::Ordinal)
     foreach ($file in ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Filter *.cs } |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin|Locales)\\' })) {
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|Locales)[\\/]' })) {
         $text = [IO.File]::ReadAllText($file.FullName)
         foreach ($m in [regex]::Matches($text, $callPattern)) {
             $literal = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\').Replace('\n', "`n").Replace('\r', "`r").Replace('\t', "`t")
