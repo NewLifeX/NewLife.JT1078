@@ -1,5 +1,34 @@
 # ChangeLog
 
+## v1.0.2026.1024
+
+### 新增
+- 集群命令下发总线与 `DeviceSessionManager` 统一设备会话管理（本地命中 + 广播转发）
+- UDP 传输支持、HLS（MPEG-TS）切片器与纯 C# MP3 编码器
+- Avalonia 桌面测试客户端：直播拉流、录像回放、设备命令、TCP/UDP 直连，集成 LibVLC 播放
+- `ProtocolDecoder` 协议指令解码（T1205/T9003/T9101/T9102/T9201 等）
+- NativeAOT 支持：`ILLink.Descriptors.xml` + AotSmoke 冒烟工程 + win-x64/linux-x64/linux-arm64 等 RID 矩阵
+- 运行时多语言本地化：三个程序集词表（10 种语言），日志/异常/界面消息按语言翻译
+- 11 种语言 README 与生态版图、团队介绍
+
+### 改进
+- 升级依赖：NewLife.Core 12.0.2026.1024、NewLife.Audio 1.3.2026.1024、NewLife.Video 1.3.2026.1024
+- 适配 NewLife.Core 12 的 `IMessageCodec`/`MessagePump` 协议模式，流式消息体正确物化
+- FLV/fMP4 转封装收敛到 NewLife.Video，音频编解码收敛到 NewLife.Audio，核心包只保留 RTP 相关逻辑
+- 发布包启用强名称签名、固定程序集版本，附带 snupkg 符号包、SourceLink 与 README.nuget
+- 解决方案切换为 slnx，统一 file-scoped 命名空间并英文化枚举成员
+
+### 修复
+- 分包合并：缺少首包时丢弃残缺帧、空消息安全返回、原子包不参与合并
+- H.264：SPS 解析改用边界检查解析器避免栈溢出；连续起始码不再产生空 NAL 单元
+- 解包后分段负载转为连续缓冲区，链式负载可深拷贝与整帧构建
+- 会话注销按对象引用匹配，避免重连时误删新会话；下行信令保持会话通道
+- 客户端补充应用清单，修复原生视频窗口创建失败
+
+### 测试
+- 168 项单元测试（net10.0；net8.0 为 140 项）覆盖协议、编解码、消息模型、服务端、客户端与多语言
+- CI：Windows 构建 net461/netstandard/net6.0/net8.0/net10.0 全目标并扫描 IL 裁剪告警，Ubuntu/Windows 双平台测试，pack 资产校验
+
 ## v1.0.2026.0712
 
 ### 新增

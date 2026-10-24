@@ -38,7 +38,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.JT1078</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>JT1078;1078;GB1078;视频通讯;流媒体;服务端;TCP;UDP;FLV;fMP4;HLS;物联网;IoT;新生命团队;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>v1.0 正式版：基于 NewLife.Net 的 JT1078 TCP/UDP 服务端，RTP 分包合并、直播端点、录像回放与集群命令总线；支持 AOT 与多语言</PackageReleaseNotes>
+    <PackageReleaseNotes>v1.0.2026.1024 正式版：基于 NewLife.Net 的 JT1078 TCP/UDP 服务端，RTP 分包合并、直播端点、录像回放与集群命令总线；升级 NewLife.Core 12.0.2026.1024；支持 NativeAOT 与 10 种语言运行时本地化</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -49,7 +49,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1021-beta0321" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
