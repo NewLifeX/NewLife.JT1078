@@ -303,7 +303,7 @@ public class DeviceSessionManager : DisposeBase
     #region 辅助
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.InfoPrefixed("DeviceSessionManager", format, args);
+        XTrace.Log.InfoPrefixed("DeviceSessionManager ", format, args);
     }
     #endregion
 }

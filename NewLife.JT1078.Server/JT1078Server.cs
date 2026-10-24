@@ -51,7 +51,8 @@ public class JT1078Server : NetServer<JT1078Session>
 
         base.OnStart();
 
-        WriteLog("JT1078 server started on port {0}", Port);
+        // NetServer.Log 默认为 NullLogger，WriteLog 会被静默丢弃；启动日志属于关键生命周期信息，直接走 XTrace
+        XTrace.Log.InfoPrefixed(Name + " ", "Server started on port {0}", Port);
     }
 
     /// <summary>停止服务</summary>

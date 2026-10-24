@@ -63,13 +63,13 @@ using var server = new JT1078Server { Port = 0 };
 if (server.Protocol is not JTCodec) throw new InvalidOperationException("Server protocol not configured.");
 
 // 服务端词表：模块初始化器在程序集加载后注册，日志模板按语言翻译或回退英文
-var logKey = "JT1078 server started on port {0}";
+var logKey = "Server started on port {0}";
 var logText = Localization.Translate(logKey, 1078);
 if (localized)
 {
     if (!logText.Contains("服务端已启动")) throw new InvalidOperationException("Server localization failed: " + logText);
 }
-else if (logText != "JT1078 server started on port 1078") throw new InvalidOperationException("Server fallback failed: " + logText);
+else if (logText != "Server started on port 1078") throw new InvalidOperationException("Server fallback failed: " + logText);
 
 // DI 装配在裁剪后仍可解析服务
 var services = new ServiceCollection();

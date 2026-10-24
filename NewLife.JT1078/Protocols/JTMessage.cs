@@ -1,6 +1,5 @@
-﻿using NewLife.Data;
+using NewLife.Data;
 using NewLife.JT1078.Serialization;
-using NewLife.Log;
 using NewLife.Messaging;
 using NewLife.Serialization;
 using System.Runtime.Serialization;
@@ -202,19 +201,11 @@ public class JTMessage : Message, IAccessor
     /// <returns>拥有句柄的数据包，调用方负责释放</returns>
     public IOwnerPacket ToOwnerPacket()
     {
-        try
-        {
-            var ms = new MemoryStream();
-            Write(ms, null);
+        var ms = new MemoryStream();
+        Write(ms, null);
 
-            ms.Position = 0;
-            return new OwnerPacket(ms, 0);
-        }
-        catch (Exception ex)
-        {
-            XTrace.WriteException(ex);
-            throw;
-        }
+        ms.Position = 0;
+        return new OwnerPacket(ms, 0);
     }
 
     /// <summary>构建头部数据包。长度字段使用指定负载长度，不包含负载数据</summary>

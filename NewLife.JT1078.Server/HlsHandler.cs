@@ -244,7 +244,7 @@ public class HlsHandler : IMsgHandler
     #region 辅助
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.InfoPrefixed("HlsHandler", format, args);
+        XTrace.Log.InfoPrefixed("HlsHandler ", format, args);
     }
     #endregion
 }

@@ -78,7 +78,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
         // 启动接收线程
         System.Threading.ThreadPool.QueueUserWorkItem(_ => ReceiveLoop());
 
-        WriteLog("UDP server started on port {0}", port);
+        WriteLog("Server started on port {0}", port);
     }
 
     /// <summary>停止 UDP 服务</summary>
@@ -98,7 +98,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
             // 套接字可能已被释放，忽略关闭异常
         }
 
-        WriteLog("UDP server stopped");
+        WriteLog("Server stopped");
     }
 
     /// <summary>接收循环</summary>
@@ -164,7 +164,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
                     Channel = msg.Channel,
                 };
                 DeviceManager?.Register(key, udpSession);
-                WriteLog("UDP device online SIM={0} Ch={1} EP={2}", msg.SIM, msg.Channel, remoteEndPoint);
+                WriteLog("Device online SIM={0} Ch={1} EP={2}", msg.SIM, msg.Channel, remoteEndPoint);
             }
             else if (session is JT1078UdpSession udpSession)
             {
@@ -182,7 +182,7 @@ public class JT1078UdpServer : DisposeBase, IDisposable2
     #region 日志
     private void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.InfoPrefixed(Name, format, args);
+        XTrace.Log.InfoPrefixed(Name + " ", format, args);
     }
     #endregion
 }

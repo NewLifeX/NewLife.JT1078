@@ -11,6 +11,7 @@ public class HttpSession : DisposeBase, IMsgUser
     #region 属性
     private static Int32 _gid;
     private readonly Func<Byte[], ValueTask> _writeCallback;
+    private Int32 _closed;
 
     /// <summary>会话标识</summary>
     public Int32 Id { get; } = Interlocked.Increment(ref _gid);
@@ -74,7 +75,10 @@ public class HttpSession : DisposeBase, IMsgUser
     /// <summary>关闭连接</summary>
     public void Close(String reason)
     {
-        WriteLog("HttpSession.Close Id={0} Reason={1}", Id, reason);
+        // 关闭可能被显式调用与 Dispose 重复触发，只处理第一次
+        if (Interlocked.Exchange(ref _closed, 1) != 0) return;
+
+        WriteLog("Close Id={0} Reason={1}", Id, reason);
         Hub?.RemoveUser(this);
         Hub = null;
     }
@@ -85,7 +89,7 @@ public class HttpSession : DisposeBase, IMsgUser
         if (hub == Hub)
         {
             Hub = null;
-            Hub?.RemoveUser(this);
+            hub.RemoveUser(this);
         }
     }
 
@@ -101,7 +105,7 @@ public class HttpSession : DisposeBase, IMsgUser
     /// <summary>写日志</summary>
     public void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.InfoPrefixed("HttpSession", format, args);
+        XTrace.Log.InfoPrefixed("HttpSession ", format, args);
     }
 
     /// <summary>释放资源</summary>

@@ -67,7 +67,7 @@ public class LocalizationTests
         try
         {
             Localization.Culture = new CultureInfo("zh-Hans");
-            var text = Localization.Translate("JT1078 server started on port {0}", 1078);
+            var text = Localization.Translate("Server started on port {0}", 1078);
             Assert.Contains("服务端已启动", text);
             Assert.Contains("1078", text);
         }

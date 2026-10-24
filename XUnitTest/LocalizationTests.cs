@@ -61,8 +61,8 @@ public class LocalizationTests
             Localization.Culture = CultureInfo.GetCultureInfo("en-US");
             Localization.LogCulture = CultureInfo.GetCultureInfo("ja-JP");
 
-            Assert.Equal("JT1078 server started on port 1078", Localization.Translate("JT1078 server started on port {0}", 1078));
-            Assert.Equal("JT1078 サーバーを起動しました。ポート 1078", Localization.TranslateForLog("JT1078 server started on port {0}", 1078));
+            Assert.Equal("Server started on port 1078", Localization.Translate("Server started on port {0}", 1078));
+            Assert.Equal("サーバーを起動しました。ポート 1078", Localization.TranslateForLog("Server started on port {0}", 1078));
         }
         finally
         {
@@ -91,12 +91,13 @@ public class LocalizationTests
         {
             Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");
 
-            logger.Info("JT1078 server started on port {0}", 1078);
-            logger.InfoPrefixed("DeviceSessionManager", "Register device session {0}", "SIM-1");
+            logger.Info("Server started on port {0}", 1078);
+            logger.InfoPrefixed("DeviceSessionManager ", "Register device session {0}", "SIM-1");
 
             Assert.Contains("服务端已启动", logger.Messages[0]);
             Assert.Contains("1078", logger.Messages[0]);
-            Assert.Contains("DeviceSessionManager", logger.Messages[1]);
+            // 前缀在翻译之后拼接，需带分隔符，避免出现 "DeviceSessionManager注册设备会话"
+            Assert.StartsWith("DeviceSessionManager ", logger.Messages[1]);
             Assert.Contains("注册设备会话", logger.Messages[1]);
         }
         finally

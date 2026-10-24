@@ -40,6 +40,9 @@ public class MsgHub : DisposeBase, IMsgHub
 
     /// <summary>是否已启动</summary>
     private Boolean _started;
+
+    /// <summary>关闭标记，保证 Close 幂等</summary>
+    private Int32 _closed;
     #endregion
 
     #region 方法
@@ -52,13 +55,16 @@ public class MsgHub : DisposeBase, IMsgHub
         SIM = sim;
         Channel = channel;
 
-        WriteLog("MsgHub.Start {0} Ch={1} Type={2}", sim, channel, type);
+        WriteLog("Start {0} Ch={1} Type={2}", sim, channel, type);
     }
 
     /// <summary>关闭通道，断开所有订阅者</summary>
     public void Close(String reason)
     {
-        WriteLog("MsgHub.Close {0} Ch={1} Reason={2}", SIM, Channel, reason);
+        // 注销流程会先 Close 再 Dispose，Dispose 又会 Close，这里只处理第一次
+        if (Interlocked.Exchange(ref _closed, 1) != 0) return;
+
+        WriteLog("Close {0} Ch={1} Reason={2}", SIM, Channel, reason);
 
         foreach (var user in _users.ToArray())
         {
@@ -180,7 +186,7 @@ public class MsgHub : DisposeBase, IMsgHub
     /// <summary>写日志</summary>
     public void WriteLog(String format, params Object[] args)
     {
-        XTrace.Log.InfoPrefixed("MsgHub", format, args);
+        XTrace.Log.InfoPrefixed("MsgHub ", format, args);
     }
 
     /// <summary>释放资源</summary>
