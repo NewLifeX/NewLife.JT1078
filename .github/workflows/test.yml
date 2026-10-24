@@ -4,7 +4,7 @@ name: test
 # - build：Windows 完整编译解决方案，覆盖 net461 / netstandard2.0 / netstandard2.1 / net6.0 / net8.0 / net10.0 目标，
 #          并扫描构建日志中的 IL 裁剪/AOT 告警，作为 NativeAOT 兼容性的构建期门禁。
 # - test：Windows / Linux 双平台 × net8.0 / net10.0 双运行时，覆盖率与 TRX 结果留档。
-# - pack：打包 Core 与 Server，校验 nupkg 目标框架资产与 README/图标完整，防止发布包缺资产。
+# - pack：Ubuntu 打包 Core 与 Server（与发版同平台），校验 nupkg 目标框架资产与 README/图标完整，防止发布包缺资产。
 
 on:
   push:
@@ -92,7 +92,8 @@ jobs:
 
   pack:
     name: pack & package check
-    runs-on: windows-latest
+    # 与 publish.yml 同平台，提前暴露 Linux 打包问题（net461 依赖传递引用程序集，与 NewLife.Audio 一致）
+    runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:

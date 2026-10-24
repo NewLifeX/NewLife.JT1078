@@ -1,6 +1,7 @@
 name: publish-beta
 
-# 预览发版（参考 NewLife.Core）：master 推送且核心/服务端变更时打包日期+时间版本，推送 GitHub Packages 与 NuGet.org。
+# 预览发版（参考 NewLife.Core）：master/main 推送且核心或服务端源码变更时，打包日期+时间版本，
+# 同时推送 GitHub Packages 与 NuGet.org。预览包不创建 GitHub Release。
 
 on:
   push:
@@ -42,12 +43,14 @@ jobs:
         dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078/NewLife.JT1078.csproj
         dotnet pack --no-restore --version-suffix ${{ env.VERSION }} -c Release -o out NewLife.JT1078.Server/NewLife.JT1078.Server.csproj
     - name: Verify packages
-      run: pwsh -File ./tools/check-packages.ps1
-    - name: Publish GitHub Packages
-      # GitHub Packages 不支持符号包，显式跳过 snupkg
+      shell: pwsh
+      run: ./tools/check-packages.ps1
+    - name: Publish to GitHub Packages
+      # 备用镜像渠道，失败只告警，不阻断 NuGet.org 预览发布；GitHub Packages 不支持符号包，显式跳过 snupkg
+      continue-on-error: true
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --no-symbols --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
-    - name: Publish NuGet.org
+    - name: Publish to NuGet.org
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --no-symbols --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
         dotnet nuget push ./out/*.snupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
